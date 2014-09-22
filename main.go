@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/carlosdp/harbor/container"
+	"github.com/carlosdp/harbor/git-puller"
 	"github.com/carlosdp/harbor/github-hook"
-	"github.com/carlosdp/harbor/gitpuller"
 	"github.com/carlosdp/harbor/image"
 	"net/http"
 )
