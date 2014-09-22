@@ -1,4 +1,4 @@
-package main
+package githubhook
 
 import (
 	"encoding/json"
@@ -22,10 +22,6 @@ type githubRepository struct {
 type githubRequest struct {
 	CommitID string           `json:"after"`
 	Repo     githubRepository `json:"repository"`
-}
-
-func (gh *GithubHook) Endpoint() string {
-	return "/github"
 }
 
 func (gh *GithubHook) HandleRequest(req *http.Request) {

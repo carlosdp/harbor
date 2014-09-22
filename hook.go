@@ -5,7 +5,6 @@ import (
 )
 
 type Hook interface {
-	Endpoint() string
 	HandleRequest(req *http.Request) string
 	Name() string
 	DeploymentID() string

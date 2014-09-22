@@ -42,8 +42,11 @@ We can use this to create a deployment chain which deploys a canary, waits 10 mi
 If it doesn't receive an event in the timeout, `FleetScheduler` and `ConsulNotifier` execute a quiet `Rollback` and the chain continues with a full deployment with the subsequent `Fleet-Scheduler` and `Consul-Notifier`, finally ending with the GitHub Deployment Status API notifier.
 
 ```json
-{"web-chain": [
-  {"hook": "git_deployment", "endpoint": "web"},
+{"web-chain":{
+"hooks": [
+  {"id": "git-deployment", "endpoint": "/web"},
+],
+"chain": [
   {"puller": "git-puller", "allowed_host": "github.com"},
   {"scheduler": "fleet", "strategy": "canary",
     "always_rollback": true, "then":
@@ -56,10 +59,14 @@ If it doesn't receive an event in the timeout, `FleetScheduler` and `ConsulNotif
       }
     ]
   },
-  {"scheduler": "fleet", "strategy": "full_replace"},
-  {"notifier": "github_deployment_status", "api_key": "xxx"
-    "api_secret": "xxx"}
-]}
+  {"scheduler": "fleet", "strategy": "full_replace", "then":
+    [
+      {"notifier": "github_deployment_status", "api_key": "xxx", "api_secret": "xxx"}
+    ]
+  }
+]
+}
+}
 ```
 
 Another cool example is you could have an `AWSScheduler` which checks if it is neccessary to spin up a new instance before continuing with a deployment. The possibilities are endless with this light-weight framework.
