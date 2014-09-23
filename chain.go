@@ -1,5 +1,9 @@
 package main
 
+import (
+	"errors"
+)
+
 type ChainLinkType int
 
 const (
@@ -44,4 +48,14 @@ func (c *Chain) LinksOfType(t ChainLinkType) []LinkType {
 	}
 
 	return links
+}
+
+func (c *Chain) LinkPosition(link *ChainLink) (int, error) {
+	for i, l := range c.Links {
+		if l == link {
+			return i, nil
+		}
+	}
+
+	return -1, errors.New("link not in chain")
 }
