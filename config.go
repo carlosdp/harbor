@@ -15,15 +15,17 @@ func ParseConfig(configPath string) ([]*Chain, error) {
 		return nil, err
 	}
 
-	var chains map[string]interface{}
+	var chainDefs map[string]interface{}
 	decoder := json.NewDecoder(f)
 
-	err = decoder.Decode(&chains)
+	err = decoder.Decode(&chainDefs)
 	if err != nil {
 		return nil, err
 	}
 
-	for chainName, chainDef := range chains {
+	chains := make([]*Chain, 0)
+
+	for chainName, chainDef := range chainDefs {
 		chainLinkDefs, ok := chainDef.([]interface{})
 		if !ok {
 			return nil, errors.New("chain is not an array")
@@ -35,13 +37,11 @@ func ParseConfig(configPath string) ([]*Chain, error) {
 		}
 
 		chain.Name = chainName
-		for _, link := range chain.Links {
-			hookWrap := link.Link.(*hook.HookWrapper)
-			fmt.Println(hookWrap.Name())
-		}
+
+		chains = append(chains, chain)
 	}
 
-	return nil, nil
+	return chains, nil
 }
 
 func parseChain(linkDefs []interface{}) (*Chain, error) {

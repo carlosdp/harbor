@@ -1,9 +1,9 @@
 package main
 
-type HookType int
+type ChainLinkType int
 
 const (
-	HOOK HookType = iota
+	HOOK ChainLinkType = iota
 	PULLER
 	SCHEDULER
 	NOTIFIER
@@ -17,14 +17,13 @@ type LinkType interface {
 
 type ChainLink struct {
 	Link     LinkType
-	Type     HookType
+	Type     ChainLinkType
 	SubChain *Chain
 }
 
 type Chain struct {
-	Name        string
-	Links       []*ChainLink
-	CurrentStep int
+	Name  string
+	Links []*ChainLink
 }
 
 func NewChain() *Chain {
@@ -33,4 +32,16 @@ func NewChain() *Chain {
 
 func NewChainLink() *ChainLink {
 	return &ChainLink{}
+}
+
+func (c *Chain) LinksOfType(t ChainLinkType) []LinkType {
+	links := make([]LinkType, 0)
+
+	for _, link := range c.Links {
+		if link.Type == t {
+			links = append(links, link.Link)
+		}
+	}
+
+	return links
 }
