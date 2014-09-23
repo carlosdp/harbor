@@ -2,6 +2,7 @@ package hook
 
 import (
 	"errors"
+	"github.com/carlosdp/harbor/chain"
 	"net/http"
 )
 
@@ -35,7 +36,7 @@ func (hw *HookWrapper) Name() string {
 	return hw.name
 }
 
-func (hw *HookWrapper) Execute() error {
+func (hw *HookWrapper) Execute(d chain.Deployment) error {
 	return nil
 }
 

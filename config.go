@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/hook"
+	"github.com/carlosdp/harbor/puller"
 	"os"
 )
 
-func ParseConfig(configPath string) ([]*Chain, error) {
+func ParseConfig(configPath string) ([]*chain.Chain, error) {
 	fmt.Println("Parsing chain")
 	f, err := os.Open(configPath)
 	if err != nil {
@@ -23,7 +25,7 @@ func ParseConfig(configPath string) ([]*Chain, error) {
 		return nil, err
 	}
 
-	chains := make([]*Chain, 0)
+	chains := make([]*chain.Chain, 0)
 
 	for chainName, chainDef := range chainDefs {
 		chainLinkDefs, ok := chainDef.([]interface{})
@@ -44,16 +46,16 @@ func ParseConfig(configPath string) ([]*Chain, error) {
 	return chains, nil
 }
 
-func parseChain(linkDefs []interface{}) (*Chain, error) {
-	chain := NewChain()
-	chain.Links = make([]*ChainLink, 0)
+func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
+	newChain := chain.NewChain()
+	newChain.Links = make([]*chain.ChainLink, 0)
 	for _, linkDef := range linkDefs {
 		linkMap, ok := linkDef.(map[string]interface{})
 		if !ok {
 			return nil, errors.New("link def is not map")
 		}
 
-		link := NewChainLink()
+		link := chain.NewChainLink()
 		if _, ok = linkMap["hook"]; ok {
 			fmt.Println("hook detected")
 			name, ok := linkMap["hook"].(string)
@@ -78,9 +80,22 @@ func parseChain(linkDefs []interface{}) (*Chain, error) {
 
 			hookWrap := hook.NewHook(name, hookInt, endpointStr)
 			link.Link = hookWrap
-			link.Type = HOOK
+			link.Type = chain.HOOK
 		} else if _, ok = linkMap["puller"]; ok {
 			fmt.Println("puller detected")
+			name, ok := linkMap["puller"].(string)
+			if !ok {
+				return nil, errors.New("puller does not have name")
+			}
+
+			pullerInt, err := puller.GetPuller(name)
+			if err != nil {
+				return nil, err
+			}
+
+			pullerWrap := puller.NewPuller(name, pullerInt)
+			link.Link = pullerWrap
+			link.Type = chain.PULLER
 		} else if _, ok = linkMap["scheduler"]; ok {
 			schName, ok := linkMap["scheduler"].(string)
 
@@ -93,8 +108,8 @@ func parseChain(linkDefs []interface{}) (*Chain, error) {
 			return nil, errors.New("link type not recognized")
 		}
 
-		chain.Links = append(chain.Links, link)
+		newChain.Links = append(newChain.Links, link)
 	}
 
-	return chain, nil
+	return newChain, nil
 }

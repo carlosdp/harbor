@@ -5,6 +5,7 @@ import (
 	// "github.com/carlosdp/harbor/container"
 	// "github.com/carlosdp/harbor/git-puller"
 	// "github.com/carlosdp/harbor/image"
+	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/hook"
 	"net/http"
 )
@@ -25,8 +26,8 @@ func main() {
 		return
 	}
 
-	for _, chain := range chains {
-		for _, hookLink := range chain.LinksOfType(HOOK) {
+	for _, c := range chains {
+		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.(*hook.HookWrapper)
 			mux.HandleFunc(hookWrap.Endpoint, func(res http.ResponseWriter, req *http.Request) {
 				hookWrap.Hook.HandleRequest(req)

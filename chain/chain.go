@@ -1,4 +1,4 @@
-package main
+package chain
 
 import (
 	"errors"
@@ -13,9 +13,18 @@ const (
 	NOTIFIER
 )
 
+type Deployment interface {
+	URI() string
+	ID() string
+	WorkDir() string
+	SetURI(uri string)
+	SetID(id string)
+	SetWorkDir(workDir string)
+}
+
 type LinkType interface {
 	Name() string
-	Execute() error
+	Execute(d Deployment) error
 	Rollback() error
 }
 
