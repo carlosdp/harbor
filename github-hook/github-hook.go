@@ -2,6 +2,7 @@ package githubhook
 
 import (
 	"encoding/json"
+	"github.com/carlosdp/harbor/hook"
 	"net/http"
 	"path"
 )
@@ -22,6 +23,14 @@ type githubRepository struct {
 type githubRequest struct {
 	CommitID string           `json:"after"`
 	Repo     githubRepository `json:"repository"`
+}
+
+func init() {
+	hook.RegisterHook("github-hook", &GithubHook{})
+}
+
+func (gh *GithubHook) New() hook.Hook {
+	return &GithubHook{}
 }
 
 func (gh *GithubHook) HandleRequest(req *http.Request) {

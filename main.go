@@ -24,11 +24,11 @@ func main() {
 		Handler: mux,
 	}
 
-  _, err := ParseConfig("config.json")
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
+	_, err := ParseConfig("config.json")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	fmt.Println("starting server")
 	server.ListenAndServe()

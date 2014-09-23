@@ -1,5 +1,14 @@
 package main
 
+type HookType int
+
+const (
+	HOOK HookType = iota
+	PULLER
+	SCHEDULER
+	NOTIFIER
+)
+
 type LinkType interface {
 	Name() string
 	Execute() error
@@ -7,18 +16,21 @@ type LinkType interface {
 }
 
 type ChainLink struct {
-  Link LinkType
-  SubChain *Chain
+	Link     LinkType
+	Type     HookType
+	SubChain *Chain
 }
 
 type Chain struct {
-  Name string
+	Name        string
 	Links       []*ChainLink
 	CurrentStep int
 }
 
 func NewChain() *Chain {
-  chain := &Chain{}
+	return &Chain{}
+}
 
-  return chain
+func NewChainLink() *ChainLink {
+	return &ChainLink{}
 }
