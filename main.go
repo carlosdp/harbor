@@ -6,6 +6,7 @@ import (
 	// "github.com/carlosdp/harbor/git-puller"
 	// "github.com/carlosdp/harbor/image"
 	"github.com/carlosdp/harbor/chain"
+	"github.com/carlosdp/harbor/deployment"
 	"github.com/carlosdp/harbor/hook"
 	"net/http"
 )
@@ -28,9 +29,19 @@ func main() {
 
 	for _, c := range chains {
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
-			hookWrap := hookLink.(*hook.HookWrapper)
+			hookWrap := hookLink.Link.(*hook.HookWrapper)
 			mux.HandleFunc(hookWrap.Endpoint, func(res http.ResponseWriter, req *http.Request) {
-				hookWrap.Hook.HandleRequest(req)
+				deploy, err := deployment.NewDeployment(c, hookLink)
+				if err != nil {
+					panic(err)
+				}
+
+				err = hookWrap.HandleRequest(deploy, req)
+				if err != nil {
+					panic(err)
+				}
+
+				fmt.Println(deploy.ID())
 				res.WriteHeader(200)
 			})
 		}

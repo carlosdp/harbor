@@ -15,11 +15,15 @@ const (
 
 type Deployment interface {
 	URI() string
+	Name() string
 	ID() string
 	WorkDir() string
+	Image() string
 	SetURI(uri string)
+	SetName(name string)
 	SetID(id string)
 	SetWorkDir(workDir string)
+	SetImage(image string)
 }
 
 type LinkType interface {
@@ -47,12 +51,12 @@ func NewChainLink() *ChainLink {
 	return &ChainLink{}
 }
 
-func (c *Chain) LinksOfType(t ChainLinkType) []LinkType {
-	links := make([]LinkType, 0)
+func (c *Chain) LinksOfType(t ChainLinkType) []*ChainLink {
+	links := make([]*ChainLink, 0)
 
 	for _, link := range c.Links {
 		if link.Type == t {
-			links = append(links, link.Link)
+			links = append(links, link)
 		}
 	}
 

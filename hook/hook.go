@@ -11,7 +11,7 @@ var RegisteredHooks = make(map[string]Hook)
 type Hook interface {
 	New() Hook
 	Name() string
-	HandleRequest(req *http.Request)
+	HandleRequest(req *http.Request) error
 	DeploymentID() string
 	URI() string
 }
@@ -37,6 +37,18 @@ func (hw *HookWrapper) Name() string {
 }
 
 func (hw *HookWrapper) Execute(d chain.Deployment) error {
+	return nil
+}
+
+func (hw *HookWrapper) HandleRequest(d chain.Deployment, req *http.Request) error {
+	err := hw.Hook.HandleRequest(req)
+	if err != nil {
+		return err
+	}
+
+	d.SetName(hw.Hook.Name())
+	d.SetURI(hw.Hook.URI())
+	d.SetID(hw.Hook.DeploymentID())
 	return nil
 }
 

@@ -2,17 +2,19 @@ package deployment
 
 import (
 	"github.com/carlosdp/harbor/chain"
-	"github.com/carlosdp/harbor/hook"
 )
 
 type Deployment struct {
 	Chain          *chain.Chain
+	StartStep      int
 	CurrentStep    int
 	CompletedLinks []*chain.ChainLink
 
-	URI     string
-	ID      string
-	WorkDir string
+	uri     string
+	name    string
+	id      string
+	workDir string
+	image   string
 }
 
 func NewDeployment(dChain *chain.Chain, hookLink *chain.ChainLink) (*Deployment, error) {
@@ -21,41 +23,52 @@ func NewDeployment(dChain *chain.Chain, hookLink *chain.ChainLink) (*Deployment,
 		return nil, err
 	}
 
-	hook := hookLink.Link.(hook.Hook)
-	uri := hook.URI()
-	id := hook.DeploymentID()
-
 	d := &Deployment{
 		Chain:          dChain,
+		StartStep:      currentStep,
 		CurrentStep:    currentStep + 1,
 		CompletedLinks: make([]*chain.ChainLink, 0),
-		URI:            uri,
-		ID:             id,
 	}
 
 	return d, nil
 }
 
 func (d *Deployment) URI() string {
-	return d.URI
+	return d.uri
+}
+
+func (d *Deployment) Name() string {
+	return d.name
 }
 
 func (d *Deployment) ID() string {
-	return d.ID
+	return d.id
 }
 
 func (d *Deployment) WorkDir() string {
-	return d.WorkDir
+	return d.workDir
+}
+
+func (d *Deployment) Image() string {
+	return d.image
 }
 
 func (d *Deployment) SetURI(uri string) {
-	d.URI = uri
+	d.uri = uri
+}
+
+func (d *Deployment) SetName(name string) {
+	d.name = name
 }
 
 func (d *Deployment) SetID(id string) {
-	d.ID = id
+	d.id = id
 }
 
 func (d *Deployment) SetWorkDir(workDir string) {
-	d.WorkDir = workDir
+	d.workDir = workDir
+}
+
+func (d *Deployment) SetImage(image string) {
+	d.image = image
 }
