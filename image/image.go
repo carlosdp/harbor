@@ -2,12 +2,13 @@ package image
 
 import (
 	"archive/tar"
-	"github.com/fsouza/go-dockerclient"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/fsouza/go-dockerclient"
 )
 
 func NewImage(name string, workDir string) {
@@ -94,7 +95,7 @@ func writeTarDirectory(path string, shortPath string, tw *tar.Writer) error {
 			defer fr.Close()
 
 			h := &tar.Header{
-				Name:    finfo.Name(),
+				Name:    shortPath + "/" + finfo.Name(),
 				Size:    fi.Size(),
 				Mode:    int64(fi.Mode()),
 				ModTime: fi.ModTime(),
