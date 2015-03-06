@@ -43,7 +43,7 @@ func (b *BuilderWrapper) Rollback() error {
 	return nil
 }
 
-func RegisterHook(name string, builder Builder) {
+func RegisterBuilder(name string, builder Builder) {
 	RegisteredBuilders[name] = builder
 }
 

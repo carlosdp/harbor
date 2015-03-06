@@ -2,8 +2,9 @@ package hook
 
 import (
 	"errors"
-	"github.com/carlosdp/harbor/chain"
 	"net/http"
+
+	"github.com/carlosdp/harbor/chain"
 )
 
 var RegisteredHooks = make(map[string]Hook)
@@ -49,6 +50,7 @@ func (hw *HookWrapper) HandleRequest(d chain.Deployment, req *http.Request) erro
 	d.SetName(hw.Hook.Name())
 	d.SetURI(hw.Hook.URI())
 	d.SetID(hw.Hook.DeploymentID())
+	d.SetImage(hw.Hook.Name() + "-" + hw.Hook.DeploymentID())
 	return nil
 }
 
