@@ -32,7 +32,7 @@ Harbor only requires one simple json file to setup a deployment chain:
   {"puller": "git-puller", "allowed_host": "github.com"},
   {"builder": "docker-builder"},
   {"scheduler": "fleet", "strategy": "full_replace"},
-  {"notifier": "github_deployment_status", "api_key": "xxx"
+  {"notifier": "github_deployment_status", "api_key": "xxx",
     "api_secret": "xxx"}
 ]}
 ```
@@ -56,7 +56,7 @@ If it doesn't receive an event in the timeout, `FleetScheduler` and `ConsulNotif
       {"notifier": "consul", "service": "web",
         "tags": ["canary"], "always_rollback": true,
         "then": [
-          {"hook": "airbrake", "timeout": 600, "execute_rollback" true}
+          {"hook": "airbrake", "timeout": 600, "execute_rollback": true}
         ]
       }
     ]
