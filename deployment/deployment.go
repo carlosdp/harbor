@@ -1,6 +1,9 @@
 package deployment
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/carlosdp/harbor/chain"
 )
 
@@ -31,6 +34,47 @@ func NewDeployment(dChain *chain.Chain, hookLink *chain.ChainLink) (*Deployment,
 	}
 
 	return d, nil
+}
+
+func (d *Deployment) Run() error {
+	n := d.CurrentStep
+
+	for i := d.CurrentStep; i < len(d.Chain.Links)-n+1; i++ {
+		link := d.Chain.Links[i]
+		fmt.Println("Running ", link.Link.Name())
+		err := link.Link.Execute(d)
+		if err != nil {
+			rerr := d.Rollback()
+			if rerr != nil {
+				return errors.New("Deployment failed: " + err.Error() + ", Failed to Rollback: " + rerr.Error())
+			}
+
+			return errors.New("Deployment failed: " + err.Error())
+		}
+
+		fmt.Println("Ran ", link.Link.Name())
+
+		d.CurrentStep++
+	}
+
+	return nil
+}
+
+func (d *Deployment) Rollback() error {
+	d.CurrentStep--
+
+	var rerr error
+
+	for i := d.CurrentStep; i > d.StartStep; i-- {
+		link := d.Chain.Links[i]
+		err := link.Link.Rollback()
+		if err != nil {
+			fmt.Println("Rollback unsuccessful: " + err.Error())
+			rerr = err
+		}
+	}
+
+	return rerr
 }
 
 func (d *Deployment) URI() string {
