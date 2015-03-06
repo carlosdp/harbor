@@ -9,6 +9,7 @@ type ChainLinkType int
 const (
 	HOOK ChainLinkType = iota
 	PULLER
+	BUILDER
 	SCHEDULER
 	NOTIFIER
 )

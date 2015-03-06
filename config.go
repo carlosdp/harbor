@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+
+	"github.com/carlosdp/harbor/builder"
 	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/hook"
 	"github.com/carlosdp/harbor/puller"
-	"os"
+	"github.com/carlosdp/harbor/scheduler"
 )
 
 func ParseConfig(configPath string) ([]*chain.Chain, error) {
@@ -96,12 +99,36 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			pullerWrap := puller.NewPuller(name, pullerInt)
 			link.Link = pullerWrap
 			link.Type = chain.PULLER
-		} else if _, ok = linkMap["scheduler"]; ok {
-			schName, ok := linkMap["scheduler"].(string)
-
-			if ok {
-				fmt.Println("scheduler detected: ", schName)
+		} else if _, ok = linkMap["builder"]; ok {
+			fmt.Println("builder detected")
+			name, ok := linkMap["builder"].(string)
+			if !ok {
+				return nil, errors.New("builder does not have name")
 			}
+
+			builderInt, err := builder.GetBuilder(name)
+			if err != nil {
+				return nil, err
+			}
+
+			builderWrap := builder.NewBuilder(name, builderInt)
+			link.Link = builderWrap
+			link.Type = chain.BUILDER
+		} else if _, ok = linkMap["scheduler"]; ok {
+			fmt.Println("scheduler detected")
+			name, ok := linkMap["scheduler"].(string)
+			if !ok {
+				return nil, errors.New("scheduler does not have name")
+			}
+
+			schedulerInt, err := scheduler.GetScheduler(name)
+			if err != nil {
+				return nil, err
+			}
+
+			schedulerWrap := scheduler.NewScheduler(name, schedulerInt)
+			link.Link = schedulerWrap
+			link.Type = chain.SCHEDULER
 		} else if _, ok = linkMap["notifier"]; ok {
 			fmt.Println("notifier detected")
 		} else {

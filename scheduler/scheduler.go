@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"errors"
+
 	"github.com/carlosdp/harbor/chain"
 )
 
@@ -37,4 +39,17 @@ func (s *SchedulerWrapper) Execute(d chain.Deployment) error {
 
 func (s *SchedulerWrapper) Rollback() error {
 	return nil
+}
+
+func RegisterScheduler(name string, scheduler Scheduler) {
+	RegisteredSchedulers[name] = scheduler
+}
+
+func GetScheduler(name string) (Scheduler, error) {
+	scheduler, ok := RegisteredSchedulers[name]
+	if !ok {
+		return nil, errors.New("scheduler not found")
+	}
+
+	return scheduler, nil
 }

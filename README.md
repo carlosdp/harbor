@@ -5,10 +5,13 @@ Harbor is a light-weight automated service orchestration system that is designed
 There are 4 different types of providers in a Harbor deployment chain:
 
 ### Hooks
-Hooks are the providers that receive notification of a requested deployment and gather any necessary information. An example of a Hook is a GitHub Deployment API webhook. This Hook would receive a `create_deployment` event from GitHub, authenticate it, and then gather the information on the repository in question to pass to the next stage in the chain.
+Hooks are the providers that receive notification of a requested deployment and gather any necessary information. An example of a Hook is a GitHub Deployment API webhook. This Hook would receive a `create_deployment` event from GitHub, authenticate it, and then gather the information on the repository in question to pass to the next stage in the chain. Every chain must start with a Hook.
 
 ### Pullers
 Pullers are simply responsible for grabbing the correct version of the repository being deployed. An obvious Puller is the Git Puller which pulls from a specified Git remote repository and branch.
+
+### Builders
+Builders are responsible for taking source code and building it into a package that can be passed to the Schedulers. An example of a builder would be a Docker Builder that builds a container using a Dockerfile in the source code and passes the image to the Scheduler. Builders are not always necessary in a chain as it is generally better practice to perform a build using a CI or dedicated build system which would then pass the already built package or container image to Harbor via a Hook.
 
 ### Schedulers
 Schedulers deploy the new container to the cluster. An example Scheduler is the Fleet Scheduler which uses CoreOS Fleet to deploy containers across a range of cluster machines.
@@ -27,6 +30,7 @@ Harbor only requires one simple json file to setup a deployment chain:
 {"web-chain": [ 
   {"hook": "git_deployment", "endpoint": "web"},
   {"puller": "git-puller", "allowed_host": "github.com"},
+  {"builder": "docker-builder"},
   {"scheduler": "fleet", "strategy": "full_replace"},
   {"notifier": "github_deployment_status", "api_key": "xxx"
     "api_secret": "xxx"}
@@ -45,6 +49,7 @@ If it doesn't receive an event in the timeout, `FleetScheduler` and `ConsulNotif
 {"web-chain":[
   {"hook": "git-deployment", "endpoint": "/web"},
   {"puller": "git-puller", "allowed_host": "github.com"},
+  {"builder": "docker-builder"},
   {"scheduler": "fleet", "strategy": "canary",
     "always_rollback": true, "then":
     [
