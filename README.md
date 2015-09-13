@@ -1,8 +1,13 @@
 # Harbor
 Harbor is a light-weight automated service orchestration system that is designed to assist in the continuous deployment of Docker container-based clusters in a minimal configuration environment. This design encourages preventing vendor lock-in and spreading a cluster over multiple cloud service providers to reduce dependency.
 
+## What it is not
+Harbor is **not** a health-check framework or a process/node monitoring service. It strictly deals with the actions that are involved in managing the deployment and placement of service nodes, and the rolling back of actions performed in a deployment.
+
+For example, Harbor will not detect when a Docker container fails, but a service that does detect that can communicate to Harbor and have it perform an action, such as deploying another node or rolling back the latest deployment. Harbor is designed to do **one** thing very well, and that is making the deployment of services over a cluster (1 node or 1000+) easy, trustworthy, stable, and reversible in a fully automated fashion.
+
 ## Design
-There are 4 different types of providers in a Harbor deployment chain:
+There are 5 different types of providers in a Harbor deployment chain:
 
 ### Hooks
 Hooks are the providers that receive notification of a requested deployment and gather any necessary information. An example of a Hook is a GitHub Deployment API webhook. This Hook would receive a `create_deployment` event from GitHub, authenticate it, and then gather the information on the repository in question to pass to the next stage in the chain. Every chain must start with a Hook.
@@ -27,7 +32,7 @@ Harbor only requires one simple json file to setup a deployment chain:
 *Note:* Deployment Chains must be suffixed with '-chain'
 
 ```json
-{"web-chain": [ 
+{"web-chain": [
   {"hook": "git_deployment", "endpoint": "web"},
   {"puller": "git-puller", "allowed_host": "github.com"},
   {"builder": "docker-builder"},
