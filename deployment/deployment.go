@@ -7,6 +7,7 @@ import (
 	"github.com/carlosdp/harbor/chain"
 )
 
+// Deployment is a single deployment that can be run.
 type Deployment struct {
 	Chain          *chain.Chain
 	StartStep      int
@@ -20,6 +21,8 @@ type Deployment struct {
 	image   string
 }
 
+// NewDeployment creates a deployment from a `chain` and `hookLink`
+// and returns a deployment that is ready to be run or rolled back.
 func NewDeployment(dChain *chain.Chain, hookLink *chain.Link) (*Deployment, error) {
 	currentStep, err := dChain.LinkPosition(hookLink)
 	if err != nil {
@@ -36,6 +39,7 @@ func NewDeployment(dChain *chain.Chain, hookLink *chain.Link) (*Deployment, erro
 	return d, nil
 }
 
+// Run runs the deployment through the chain.
 func (d *Deployment) Run() error {
 	n := d.CurrentStep
 
@@ -60,6 +64,8 @@ func (d *Deployment) Run() error {
 	return nil
 }
 
+// Rollback executes a rolling back of the deployment backward
+// through the chain.
 func (d *Deployment) Rollback() error {
 	d.CurrentStep--
 
@@ -77,42 +83,55 @@ func (d *Deployment) Rollback() error {
 	return rerr
 }
 
+// URI is the uri of the resource being deployed.
 func (d *Deployment) URI() string {
 	return d.uri
 }
 
+// Name is the name of the resource being deployed.
 func (d *Deployment) Name() string {
 	return d.name
 }
 
+// ID is the deployment id that identifies the deployment for the
+// particular version of the resource being deployed.
 func (d *Deployment) ID() string {
 	return d.id
 }
 
+// WorkDir is the local working directory containing the resource
+// being deployed.
 func (d *Deployment) WorkDir() string {
 	return d.workDir
 }
 
+// Image is the image identifier for the built artifact.
 func (d *Deployment) Image() string {
 	return d.image
 }
 
+// SetURI sets the uri for the resource being deployed.
 func (d *Deployment) SetURI(uri string) {
 	d.uri = uri
 }
 
+// SetName sets the name of the resource being deployed.
 func (d *Deployment) SetName(name string) {
 	d.name = name
 }
 
+// SetID sets the deployment id.
 func (d *Deployment) SetID(id string) {
 	d.id = id
 }
 
+// SetWorkDir sets the local working directory for the resource
+// being deployed.
 func (d *Deployment) SetWorkDir(workDir string) {
 	d.workDir = workDir
 }
 
+// SetImage sets the image identifier for the built artifact.
 func (d *Deployment) SetImage(image string) {
 	d.image = image
 }
