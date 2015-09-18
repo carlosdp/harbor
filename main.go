@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/config"
 	"github.com/carlosdp/harbor/deployment"
@@ -20,7 +21,7 @@ func main() {
 
 	for _, c := range chains {
 		for _, link := range c.Links {
-			fmt.Println("Link loaded: ", link.Link.Name())
+			log.Info("Link loaded: ", link.Link.Name())
 		}
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.Link.(*hook.Wrapper)
@@ -53,6 +54,6 @@ func main() {
 		Handler: mux,
 	}
 
-	fmt.Println("starting server")
+	log.Info("Starting Server")
 	server.ListenAndServe()
 }

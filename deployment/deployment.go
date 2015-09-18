@@ -2,8 +2,8 @@ package deployment
 
 import (
 	"errors"
-	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
 )
 
@@ -45,7 +45,7 @@ func (d *Deployment) Run() error {
 
 	for i := d.CurrentStep; i < len(d.Chain.Links)-n+1; i++ {
 		link := d.Chain.Links[i]
-		fmt.Println("Running ", link.Link.Name())
+		log.Info("Running ", link.Link.Name())
 		err := link.Link.Execute(d)
 		if err != nil {
 			rerr := d.Rollback()
@@ -56,7 +56,7 @@ func (d *Deployment) Run() error {
 			return errors.New("Deployment failed: " + err.Error())
 		}
 
-		fmt.Println("Ran ", link.Link.Name())
+		log.Info("Ran ", link.Link.Name())
 
 		d.CurrentStep++
 	}
@@ -75,7 +75,7 @@ func (d *Deployment) Rollback() error {
 		link := d.Chain.Links[i]
 		err := link.Link.Rollback()
 		if err != nil {
-			fmt.Println("Rollback unsuccessful: " + err.Error())
+			log.Error("Rollback unsuccessful: " + err.Error())
 			rerr = err
 		}
 	}

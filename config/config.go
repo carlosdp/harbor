@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/carlosdp/harbor/builder"
@@ -15,7 +14,6 @@ import (
 
 // ParseConfig parses a JSON chain config file and returns a complete chain.
 func ParseConfig(configPath string) ([]*chain.Chain, error) {
-	fmt.Println("Parsing chain")
 	f, err := os.Open(configPath)
 	if err != nil {
 		return nil, err
@@ -61,7 +59,6 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 
 		link := chain.NewLink()
 		if _, ok = linkMap["hook"]; ok {
-			fmt.Println("hook detected")
 			name, ok := linkMap["hook"].(string)
 			if !ok {
 				return nil, errors.New("hook does not have name")
@@ -86,7 +83,6 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			link.Link = hookWrap
 			link.Type = chain.HOOK
 		} else if _, ok = linkMap["puller"]; ok {
-			fmt.Println("puller detected")
 			name, ok := linkMap["puller"].(string)
 			if !ok {
 				return nil, errors.New("puller does not have name")
@@ -101,7 +97,6 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			link.Link = pullerWrap
 			link.Type = chain.PULLER
 		} else if _, ok = linkMap["builder"]; ok {
-			fmt.Println("builder detected")
 			name, ok := linkMap["builder"].(string)
 			if !ok {
 				return nil, errors.New("builder does not have name")
@@ -116,7 +111,6 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			link.Link = builderWrap
 			link.Type = chain.BUILDER
 		} else if _, ok = linkMap["scheduler"]; ok {
-			fmt.Println("scheduler detected")
 			name, ok := linkMap["scheduler"].(string)
 			if !ok {
 				return nil, errors.New("scheduler does not have name")
@@ -131,7 +125,6 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			link.Link = schedulerWrap
 			link.Type = chain.SCHEDULER
 		} else if _, ok = linkMap["notifier"]; ok {
-			fmt.Println("notifier detected")
 		} else {
 			return nil, errors.New("link type not recognized")
 		}
