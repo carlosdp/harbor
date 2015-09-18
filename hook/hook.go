@@ -7,8 +7,10 @@ import (
 	"github.com/carlosdp/harbor/chain"
 )
 
+// RegisteredHooks contains the hooks registered with the Harbor build.
 var RegisteredHooks = make(map[string]Hook)
 
+// Hook describes an interface for a Harbor Hook.
 type Hook interface {
 	New() Hook
 	Name() string
@@ -17,14 +19,17 @@ type Hook interface {
 	URI() string
 }
 
-type HookWrapper struct {
+// Wrapper is a wrapper struct for holding a
+// names Hook in the registry.
+type Wrapper struct {
 	name     string
 	Endpoint string
 	Hook     Hook
 }
 
-func NewHook(name string, hook Hook, endpoint string) *HookWrapper {
-	hookWrap := &HookWrapper{
+// NewHook wraps a hook and returns a hook Wrapper.
+func NewHook(name string, hook Hook, endpoint string) *Wrapper {
+	hookWrap := &Wrapper{
 		name:     name,
 		Hook:     hook.New(),
 		Endpoint: endpoint,
@@ -33,15 +38,18 @@ func NewHook(name string, hook Hook, endpoint string) *HookWrapper {
 	return hookWrap
 }
 
-func (hw *HookWrapper) Name() string {
+// Name returns the name of the hook.
+func (hw *Wrapper) Name() string {
 	return hw.name
 }
 
-func (hw *HookWrapper) Execute(d chain.Deployment) error {
+// Execute does nothing at the moment in a hook.
+func (hw *Wrapper) Execute(d chain.Deployment) error {
 	return nil
 }
 
-func (hw *HookWrapper) HandleRequest(d chain.Deployment, req *http.Request) error {
+// HandleRequest handles an incoming web hook request.
+func (hw *Wrapper) HandleRequest(d chain.Deployment, req *http.Request) error {
 	err := hw.Hook.HandleRequest(req)
 	if err != nil {
 		return err
@@ -54,14 +62,18 @@ func (hw *HookWrapper) HandleRequest(d chain.Deployment, req *http.Request) erro
 	return nil
 }
 
-func (hw *HookWrapper) Rollback() error {
+// Rollback does nothing at the moment in a hook.
+func (hw *Wrapper) Rollback() error {
 	return nil
 }
 
+// RegisterHook registers a hook with `name`.
 func RegisterHook(name string, hook Hook) {
 	RegisteredHooks[name] = hook
 }
 
+// GetHook returns a hook registered as `name`, if it exists.
+// It returns an error if it does not exist.
 func GetHook(name string) (Hook, error) {
 	hook, ok := RegisteredHooks[name]
 	if !ok {

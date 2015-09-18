@@ -23,7 +23,7 @@ func main() {
 			fmt.Println("Link loaded: ", link.Link.Name())
 		}
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
-			hookWrap := hookLink.Link.(*hook.HookWrapper)
+			hookWrap := hookLink.Link.(*hook.Wrapper)
 			mux.HandleFunc(hookWrap.Endpoint, func(res http.ResponseWriter, req *http.Request) {
 				deploy, err := deployment.NewDeployment(c, hookLink)
 				if err != nil {

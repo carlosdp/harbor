@@ -6,7 +6,7 @@ import (
 	"github.com/carlosdp/harbor/chain"
 )
 
-// RegisterdBuilders contains the builders registered with the Harbor build.
+// RegisteredBuilders contains the builders registered with the Harbor build.
 var RegisteredBuilders = make(map[string]Builder)
 
 // Builder describes an interface for a Harbor Builder.
