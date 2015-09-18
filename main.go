@@ -13,16 +13,18 @@ import (
 )
 
 var port string
+var configFile string
 
 func init() {
 	flag.StringVar(&port, "p", "3001", "The port webhooks should listen on.")
+	flag.StringVar(&configFile, "c", "config.json", "Path to chain config file")
 }
 
 func main() {
 	flag.Parse()
 
 	mux := http.NewServeMux()
-	chains, err := config.ParseConfig("config.json")
+	chains, err := config.ParseConfig(configFile)
 	if err != nil {
 		fmt.Println(err)
 		return
