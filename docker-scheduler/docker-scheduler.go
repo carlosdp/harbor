@@ -8,22 +8,22 @@ import (
 )
 
 func init() {
-	scheduler.RegisterScheduler("docker-scheduler", &DockerScheduler{})
+	scheduler.RegisterScheduler("docker-scheduler", &dockerScheduler{})
 }
 
-type DockerScheduler struct {
+type dockerScheduler struct {
 }
 
-func (ds *DockerScheduler) New() scheduler.Scheduler {
-	return &DockerScheduler{}
+func (ds *dockerScheduler) New() scheduler.Scheduler {
+	return &dockerScheduler{}
 }
 
-func (ds *DockerScheduler) Schedule(image, name, id string) error {
+func (ds *dockerScheduler) Schedule(image, name, id string) error {
 	err := createContainer(image, name+"-"+id)
 	return err
 }
 
-func (ds *DockerScheduler) Rollback(name, id string) error {
+func (ds *dockerScheduler) Rollback(name, id string) error {
 	return nil
 }
 
