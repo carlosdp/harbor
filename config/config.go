@@ -52,14 +52,14 @@ func ParseConfig(configPath string) ([]*chain.Chain, error) {
 
 func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 	newChain := chain.NewChain()
-	newChain.Links = make([]*chain.ChainLink, 0)
+	newChain.Links = make([]*chain.Link, 0)
 	for _, linkDef := range linkDefs {
 		linkMap, ok := linkDef.(map[string]interface{})
 		if !ok {
 			return nil, errors.New("link def is not map")
 		}
 
-		link := chain.NewChainLink()
+		link := chain.NewLink()
 		if _, ok = linkMap["hook"]; ok {
 			fmt.Println("hook detected")
 			name, ok := linkMap["hook"].(string)

@@ -4,16 +4,19 @@ import (
 	"errors"
 )
 
-type ChainLinkType int
+// LinkType is an is an enum that identifies a link type.
+type LinkType int
 
+// LinkTypes for each type of chain link.
 const (
-	HOOK ChainLinkType = iota
+	HOOK LinkType = iota
 	PULLER
 	BUILDER
 	SCHEDULER
 	NOTIFIER
 )
 
+// Deployment describes a single deployment that can be sent through a chain.
 type Deployment interface {
 	URI() string
 	Name() string
@@ -27,33 +30,38 @@ type Deployment interface {
 	SetImage(image string)
 }
 
-type LinkType interface {
+type link interface {
 	Name() string
 	Execute(d Deployment) error
 	Rollback() error
 }
 
-type ChainLink struct {
-	Link     LinkType
-	Type     ChainLinkType
+// Link is a link in the chain.
+type Link struct {
+	Link     link
+	Type     LinkType
 	SubChain *Chain
 }
 
+// Chain is a deployment chain.
 type Chain struct {
 	Name  string
-	Links []*ChainLink
+	Links []*Link
 }
 
+// NewChain returns an empty deployment chain.
 func NewChain() *Chain {
 	return &Chain{}
 }
 
-func NewChainLink() *ChainLink {
-	return &ChainLink{}
+// NewLink returns an empty chain link.
+func NewLink() *Link {
+	return &Link{}
 }
 
-func (c *Chain) LinksOfType(t ChainLinkType) []*ChainLink {
-	links := make([]*ChainLink, 0)
+// LinksOfType returns a slice of links in the chain of `t` type.
+func (c *Chain) LinksOfType(t LinkType) []*Link {
+	var links []*Link
 
 	for _, link := range c.Links {
 		if link.Type == t {
@@ -64,7 +72,8 @@ func (c *Chain) LinksOfType(t ChainLinkType) []*ChainLink {
 	return links
 }
 
-func (c *Chain) LinkPosition(link *ChainLink) (int, error) {
+// LinkPosition returns the zero-indexed position of `link` in the chain.
+func (c *Chain) LinkPosition(link *Link) (int, error) {
 	for i, l := range c.Links {
 		if l == link {
 			return i, nil

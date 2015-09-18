@@ -11,7 +11,7 @@ type Deployment struct {
 	Chain          *chain.Chain
 	StartStep      int
 	CurrentStep    int
-	CompletedLinks []*chain.ChainLink
+	CompletedLinks []*chain.Link
 
 	uri     string
 	name    string
@@ -20,7 +20,7 @@ type Deployment struct {
 	image   string
 }
 
-func NewDeployment(dChain *chain.Chain, hookLink *chain.ChainLink) (*Deployment, error) {
+func NewDeployment(dChain *chain.Chain, hookLink *chain.Link) (*Deployment, error) {
 	currentStep, err := dChain.LinkPosition(hookLink)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func NewDeployment(dChain *chain.Chain, hookLink *chain.ChainLink) (*Deployment,
 		Chain:          dChain,
 		StartStep:      currentStep,
 		CurrentStep:    currentStep + 1,
-		CompletedLinks: make([]*chain.ChainLink, 0),
+		CompletedLinks: make([]*chain.Link, 0),
 	}
 
 	return d, nil
