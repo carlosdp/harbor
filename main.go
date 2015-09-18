@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	// "github.com/carlosdp/harbor/container"
-	// "github.com/carlosdp/harbor/git-puller"
-	// "github.com/carlosdp/harbor/image"
 	"net/http"
 
 	"github.com/carlosdp/harbor/chain"
@@ -14,14 +11,6 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	// mux.HandleFunc("/", func(response http.ResponseWriter, request *http.Request) {
-	// 	hook := &githubhook.GithubHook{}
-	// 	hook.HandleRequest(request)
-	// 	workDir := gitpuller.Pull(hook.URI())
-	// 	image.NewImage(hook.Name(), workDir)
-	// 	container.NewContainer(hook.Name(), hook.DeploymentID())
-	// })
-
 	chains, err := ParseConfig("config.json")
 	if err != nil {
 		fmt.Println(err)
