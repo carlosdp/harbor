@@ -2,12 +2,13 @@ package githubhook
 
 import (
 	"encoding/json"
-	"github.com/carlosdp/harbor/hook"
 	"net/http"
 	"path"
+
+	"github.com/carlosdp/harbor/hook"
 )
 
-type GithubHook struct {
+type githubHook struct {
 	FullName   string
 	RepoURL    string
 	Username   string
@@ -17,7 +18,7 @@ type GithubHook struct {
 
 type githubRepository struct {
 	FullName string `json:"full_name"`
-	SshUrl   string `json:"ssh_url"`
+	SSHURL   string `json:"ssh_url"`
 }
 
 type githubRequest struct {
@@ -26,14 +27,14 @@ type githubRequest struct {
 }
 
 func init() {
-	hook.RegisterHook("github-hook", &GithubHook{})
+	hook.RegisterHook("github-hook", &githubHook{})
 }
 
-func (gh *GithubHook) New() hook.Hook {
-	return &GithubHook{}
+func (gh *githubHook) New() hook.Hook {
+	return &githubHook{}
 }
 
-func (gh *GithubHook) HandleRequest(req *http.Request) error {
+func (gh *githubHook) HandleRequest(req *http.Request) error {
 	decoder := json.NewDecoder(req.Body)
 	var r githubRequest
 	err := decoder.Decode(&r)
@@ -42,20 +43,20 @@ func (gh *GithubHook) HandleRequest(req *http.Request) error {
 	}
 
 	gh.FullName = r.Repo.FullName
-	gh.RepoURL = r.Repo.SshUrl
+	gh.RepoURL = r.Repo.SSHURL
 	gh.CommitHash = r.CommitID
 
 	return nil
 }
 
-func (gh *GithubHook) Name() string {
+func (gh *githubHook) Name() string {
 	return path.Base(gh.FullName)
 }
 
-func (gh *GithubHook) DeploymentID() string {
+func (gh *githubHook) DeploymentID() string {
 	return gh.CommitHash
 }
 
-func (gh *GithubHook) URI() string {
+func (gh *githubHook) URI() string {
 	return gh.RepoURL
 }
