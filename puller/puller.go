@@ -12,7 +12,7 @@ var RegisteredPullers = make(map[string]Puller)
 // Puller describes an interface for a Harbor Puller.
 type Puller interface {
 	New() Puller
-	Pull(uri string) (string, error)
+	Pull(uri, id string) (string, error)
 }
 
 // Wrapper is a wrapper struct for holding a
@@ -39,7 +39,7 @@ func (p *Wrapper) Name() string {
 
 // Execute runs the pull operation for a deployment chain.
 func (p *Wrapper) Execute(d chain.Deployment) error {
-	workDir, err := p.Puller.Pull(d.URI())
+	workDir, err := p.Puller.Pull(d.URI(), d.ID())
 	if err != nil {
 		return err
 	}

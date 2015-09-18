@@ -21,10 +21,25 @@ func (gp *gitPuller) New() puller.Puller {
 	return &gitPuller{}
 }
 
-func (gp *gitPuller) Pull(url string) (string, error) {
+func (gp *gitPuller) Pull(url, commitHash string) (string, error) {
 	timeStamp := strconv.FormatInt(time.Now().Unix(), 10)
 	path := os.TempDir() + timeStamp
 	repo, err := git.Clone(url, path, &git.CloneOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	oid, err := git.NewOid(commitHash)
+	if err != nil {
+		return "", err
+	}
+
+	tree, err := repo.LookupTree(oid)
+	if err != nil {
+		return "", err
+	}
+
+	err = repo.CheckoutTree(tree, &git.CheckoutOpts{})
 	if err != nil {
 		return "", err
 	}
