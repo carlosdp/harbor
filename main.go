@@ -5,13 +5,14 @@ import (
 	"net/http"
 
 	"github.com/carlosdp/harbor/chain"
+	"github.com/carlosdp/harbor/config"
 	"github.com/carlosdp/harbor/deployment"
 	"github.com/carlosdp/harbor/hook"
 )
 
 func main() {
 	mux := http.NewServeMux()
-	chains, err := ParseConfig("config.json")
+	chains, err := config.ParseConfig("config.json")
 	if err != nil {
 		fmt.Println(err)
 		return

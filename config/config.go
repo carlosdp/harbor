@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -13,6 +13,7 @@ import (
 	"github.com/carlosdp/harbor/scheduler"
 )
 
+// ParseConfig parses a JSON chain config file and returns a complete chain.
 func ParseConfig(configPath string) ([]*chain.Chain, error) {
 	fmt.Println("Parsing chain")
 	f, err := os.Open(configPath)
@@ -28,7 +29,7 @@ func ParseConfig(configPath string) ([]*chain.Chain, error) {
 		return nil, err
 	}
 
-	chains := make([]*chain.Chain, 0)
+	var chains []*chain.Chain
 
 	for chainName, chainDef := range chainDefs {
 		chainLinkDefs, ok := chainDef.([]interface{})
