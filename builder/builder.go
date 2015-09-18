@@ -6,20 +6,28 @@ import (
 	"github.com/carlosdp/harbor/chain"
 )
 
+// RegisterdBuilders contains the builders registered with the Harbor build.
 var RegisteredBuilders = make(map[string]Builder)
 
+// Builder describes an interface for a Harbor Builder.
 type Builder interface {
+	// Initializes a Builder
 	New() Builder
+	// Performs a build in the `workDir` source directory
+	// and outputing `image` image.
 	Build(workDir, image string) (string, error)
 }
 
-type BuilderWrapper struct {
+// Wrapper is a wrapper struct for holding a
+// named Builder in the registry.
+type Wrapper struct {
 	name    string
 	Builder Builder
 }
 
-func NewBuilder(name string, builder Builder) *BuilderWrapper {
-	builderWrap := &BuilderWrapper{
+// NewBuilder wraps a builder and returns a builder Wrapper.
+func NewBuilder(name string, builder Builder) *Wrapper {
+	builderWrap := &Wrapper{
 		name:    name,
 		Builder: builder,
 	}
@@ -27,11 +35,13 @@ func NewBuilder(name string, builder Builder) *BuilderWrapper {
 	return builderWrap
 }
 
-func (b *BuilderWrapper) Name() string {
+// Name returns the name of the builder.
+func (b *Wrapper) Name() string {
 	return b.name
 }
 
-func (b *BuilderWrapper) Execute(d chain.Deployment) error {
+// Execute runs the build operation for a deployment chain.
+func (b *Wrapper) Execute(d chain.Deployment) error {
 	newImage, err := b.Builder.Build(d.WorkDir(), d.Image())
 	if err == nil {
 		d.SetImage(newImage)
@@ -39,14 +49,18 @@ func (b *BuilderWrapper) Execute(d chain.Deployment) error {
 	return err
 }
 
-func (b *BuilderWrapper) Rollback() error {
+// Rollback does nothing at the moment in a builder.
+func (b *Wrapper) Rollback() error {
 	return nil
 }
 
+// RegisterBuilder registers a builder with `name`.
 func RegisterBuilder(name string, builder Builder) {
 	RegisteredBuilders[name] = builder
 }
 
+// GetBuilder returns a builder registered as `name`, if it exists.
+// It returns an error if it does not exist.
 func GetBuilder(name string) (Builder, error) {
 	builder, ok := RegisteredBuilders[name]
 	if !ok {
