@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -11,7 +12,15 @@ import (
 	"github.com/carlosdp/harbor/hook"
 )
 
+var port string
+
+func init() {
+	flag.StringVar(&port, "p", "3001", "The port webhooks should listen on.")
+}
+
 func main() {
+	flag.Parse()
+
 	mux := http.NewServeMux()
 	chains, err := config.ParseConfig("config.json")
 	if err != nil {
@@ -20,8 +29,9 @@ func main() {
 	}
 
 	for _, c := range chains {
+		log.Infof("[%v] Loading chain", c.Name)
 		for _, link := range c.Links {
-			log.Info("Link loaded: ", link.Link.Name())
+			log.Infof("[%v] Link loaded: %v", c.Name, link.Link.Name())
 		}
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.Link.(*hook.Wrapper)
@@ -50,7 +60,7 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:    ":3002",
+		Addr:    ":" + port,
 		Handler: mux,
 	}
 
