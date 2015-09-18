@@ -1,11 +1,12 @@
 package gitpuller
 
 import (
-	"github.com/carlosdp/harbor/puller"
-	"github.com/libgit2/git2go"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/carlosdp/harbor/puller"
+	git "gopkg.in/libgit2/git2go.v22"
 )
 
 type GitPuller struct {
