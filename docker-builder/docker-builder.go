@@ -12,19 +12,19 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-type DockerBuilder struct {
+type dockerBuilder struct {
 	imageName string
 }
 
 func init() {
-	builder.RegisterBuilder("docker-builder", &DockerBuilder{})
+	builder.RegisterBuilder("docker-builder", &dockerBuilder{})
 }
 
-func (db *DockerBuilder) New() builder.Builder {
-	return &DockerBuilder{}
+func (db *dockerBuilder) New() builder.Builder {
+	return &dockerBuilder{}
 }
 
-func (db *DockerBuilder) Build(workDir, image string) (string, error) {
+func (db *dockerBuilder) Build(workDir, image string) (string, error) {
 	image, err := createImage(workDir, image)
 	if err != nil {
 		return "", err
