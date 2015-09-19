@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
+	"os"
 
 	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
@@ -13,22 +13,32 @@ import (
 )
 
 var port string
-var configFile string
+var configPath string
 
 func init() {
 	flag.StringVar(&port, "p", "3001", "The port webhooks should listen on.")
-	flag.StringVar(&configFile, "c", "config.json", "Path to chain config file")
+	flag.StringVar(&configPath, "c", "", "Path to chain config file")
 }
 
 func main() {
 	flag.Parse()
 
-	mux := http.NewServeMux()
+	if configPath == "" {
+		log.Error("[Config] You must specify a config file with -c")
+		os.Exit(1)
+	}
+	configFile, err := os.Open(configPath)
+	if err != nil {
+		log.Errorf("[Config] %v", err)
+		os.Exit(1)
+	}
 	chains, err := config.ParseConfig(configFile)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Errorf("[Config] %v", err)
+		os.Exit(1)
 	}
+
+	mux := http.NewServeMux()
 
 	for _, c := range chains {
 		log.Infof("[%v] Loading chain", c.Name)
@@ -40,22 +50,24 @@ func main() {
 			mux.HandleFunc(hookWrap.Endpoint, func(res http.ResponseWriter, req *http.Request) {
 				deploy, err := deployment.NewDeployment(c, hookLink)
 				if err != nil {
-					panic(err)
+					log.Errorf("[Deployment] %v", err)
+					return
 				}
 
 				err = hookWrap.HandleRequest(deploy, req)
 				if err != nil {
-					panic(err)
+					log.Errorf("[Deployment] %v", err)
+					return
 				}
 
 				go func() {
 					err := deploy.Run()
 					if err != nil {
-						fmt.Println(err)
+						log.Errorf("[Deployment] %v", err)
+						return
 					}
 				}()
 
-				fmt.Println(deploy.ID())
 				res.WriteHeader(200)
 			})
 		}

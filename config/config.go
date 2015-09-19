@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"os"
+	"io"
 
 	"github.com/carlosdp/harbor/builder"
 	"github.com/carlosdp/harbor/chain"
@@ -12,17 +12,25 @@ import (
 	"github.com/carlosdp/harbor/scheduler"
 )
 
+type linkConfig struct {
+	// Name of the Chain Link
+	Name string
+	// Type of Chain Link
+	Type chain.LinkType
+	// Top-level Link parameters
+	Parameters map[string]interface{}
+	// Link-specific options
+	Options map[string]interface{}
+	// The Sub Chain for this Link
+	SubChain []linkConfig
+}
+
 // ParseConfig parses a JSON chain config file and returns a complete chain.
-func ParseConfig(configPath string) ([]*chain.Chain, error) {
-	f, err := os.Open(configPath)
-	if err != nil {
-		return nil, err
-	}
-
+func ParseConfig(configFile io.Reader) ([]*chain.Chain, error) {
 	var chainDefs map[string]interface{}
-	decoder := json.NewDecoder(f)
+	decoder := json.NewDecoder(configFile)
 
-	err = decoder.Decode(&chainDefs)
+	err := decoder.Decode(&chainDefs)
 	if err != nil {
 		return nil, err
 	}
