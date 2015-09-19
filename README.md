@@ -1,5 +1,31 @@
 # Harbor
-Harbor is a light-weight automated service orchestration system that is designed to assist in the continuous deployment of Docker container-based clusters in a minimal configuration environment. This design encourages preventing vendor lock-in and spreading a cluster over multiple cloud service providers to reduce dependency.
+Harbor is a light-weight automated, declarative-configuration, service orchestration system that is designed to assist in the continuous deployment of Docker container-based clusters in a minimal configuration environment. This design encourages preventing vendor lock-in and spreading a cluster over multiple cloud service providers to reduce dependency.
+
+It allows you to define "Deployment Chains" in a declarative manner, like this:
+
+```json
+{"web-chain": [
+  {"hook": "github-deployment", "endpoint": "web"},
+  {"puller": "git-puller", "options": {"allowed_host": "github.com"}},
+  {"builder": "docker-builder"},
+  {"scheduler": "docker-scheduler"},
+  {"notifier": "consul", "options": {"service": "web"}}
+]}
+```
+
+Using this configuration, Harbor will listen for a Deployment webhook request from GitHub, and then work its way down the chain:
+
+- Pull the repository and commit sent by the webhook.
+- Build a Docker image from the Dockerfile in the repository.
+- Schedule a Docker container using the local Docker daemon.
+- Notify Consul of the new container node.
+
+It will also detect any existing previous deploys and roll it back by:
+
+- Notifying Consul to remove the container node.
+- Rolling back the scheduled container by destroying it.
+
+Here, we used GitHub, Git, Docker, and Consul "chain links", but Harbor is entirely plugin based, so virtually any framework or service can be configured as long as a plugin is written and loaded.
 
 ## What it is not
 Harbor is **not** a health-check framework or a process/node monitoring service. It strictly deals with the actions that are involved in managing the deployment and placement of service nodes, and the rolling back of actions performed in a deployment.
@@ -7,38 +33,43 @@ Harbor is **not** a health-check framework or a process/node monitoring service.
 For example, Harbor will not detect when a Docker container fails, but a service that does detect that can communicate to Harbor and have it perform an action, such as deploying another node or rolling back the latest deployment. Harbor is designed to do **one** thing very well, and that is making the deployment of services over a cluster (1 node or 1000+) easy, trustworthy, stable, and reversible in a fully automated fashion.
 
 ## Design
-There are 5 different types of providers in a Harbor deployment chain:
+There are 5 different types of "Chain Links" (providers) in a Harbor deployment chain:
 
 ### Hooks
-Hooks are the providers that receive notification of a requested deployment and gather any necessary information. An example of a Hook is a GitHub Deployment API webhook. This Hook would receive a `create_deployment` event from GitHub, authenticate it, and then gather the information on the repository in question to pass to the next stage in the chain. Every chain must start with a Hook.
+Hooks receive notifications from external services and provide information to the rest of the chain. They are also **always** the first Link in a chain. Commonly, hooks are receive notifications of a requested deployment. An example of a Hook is a GitHub Deployment API webhook. This Hook would receive a `create_deployment` event from GitHub, authenticate it, and then gather the information on the repository in question to pass to the next stage in the chain.
 
 ### Pullers
-Pullers are simply responsible for grabbing the correct version of the repository being deployed. An obvious Puller is the Git Puller which pulls from a specified Git remote repository and branch.
+Pullers are simply responsible for grabbing the correct version of the repository or artifact being deployed. An obvious Puller is the Git Puller which pulls from a specified Git remote repository and branch. You could also have a Puller that pulls a pre-built RPM package and skip adding a builder step.
 
 ### Builders
-Builders are responsible for taking source code and building it into a package that can be passed to the Schedulers. An example of a builder would be a Docker Builder that builds a container using a Dockerfile in the source code and passes the image to the Scheduler. Builders are not always necessary in a chain as it is generally better practice to perform a build using a CI or dedicated build system which would then pass the already built package or container image to Harbor via a Hook.
+Builders are responsible for taking source code and building it into a package that can be passed to the Schedulers. An example of a builder would be the Docker Builder that builds a container using a Dockerfile in the source code and passes the image to the Scheduler. Builders are not always necessary in a chain as it is generally better practice to perform a build using a CI or dedicated build system which would then pass the already built package or container image to Harbor via a Hook.
 
 ### Schedulers
-Schedulers deploy the new container to the cluster. An example Scheduler is the Fleet Scheduler which uses CoreOS Fleet to deploy containers across a range of cluster machines.
+Schedulers deploy the new artifact to the cluster. An example Scheduler is the Fleet Scheduler which uses CoreOS Fleet to deploy containers across a range of cluster machines.
 
 ### Notifiers
 Notifiers notify some service on the status of a deployment. One example of a Notifier is a GitHub Deployment Status API notifier. Another example is a Consul notifier which changes the service configuration on deployment.
 
-If a provider runs into an error, it cancels the rest of the deployment chain and executes a `Rollback` event on the chain. More on this later.
+## Automatic Rollback
+If a Chain Link runs into an error, it cancels the rest of the deployment chain and executes a `Rollback` event on the already-executed Chain Links.
 
 ## Configuration
-Harbor only requires one simple json file to setup a deployment chain:
+Harbor only requires one simple JSON file to setup a deployment chain:
 
 *Note:* Deployment Chains must be suffixed with '-chain'
 
 ```json
 {"web-chain": [
-  {"hook": "git_deployment", "endpoint": "web"},
-  {"puller": "git-puller", "allowed_host": "github.com"},
+  {"hook": "github-deployment", "endpoint": "web"},
+  {"puller": "git-puller", "options": {"allowed_host": "github.com"}},
   {"builder": "docker-builder"},
-  {"scheduler": "fleet", "strategy": "full_replace"},
-  {"notifier": "github_deployment_status", "api_key": "xxx",
-    "api_secret": "xxx"}
+  {"scheduler": "fleet", "cache_deploys": 1, "options":{
+    "strategy": "full_replace"
+  }},
+  {"notifier": "github-deployment-status", "options": {
+    "api_key": "xxx",
+    "api_secret": "xxx"
+  }}
 ]}
 ```
 
@@ -48,30 +79,42 @@ This configuration allows for easily composing multi-step, automated deployment 
 
 We can use this to create a deployment chain which deploys a canary, waits 10 minutes to receive a message on a `Hook` that indicates an error of some kind (such as an event from a logging service like Airbrake). If it does receive a message, the Hook causes a `Rollback` event which the `FleetScheduler` and `ConsulNotifier` catches and takes the canary out of the load balancer (from Consul) and out of the cluster (via Fleet) and cancels the commit. Finally, we have a final Notifier which triggers on any status that lets our GitHub Deployment Status API know the build failed.
 
-If it doesn't receive an event in the timeout, `FleetScheduler` and `ConsulNotifier` execute a quiet `Rollback` and the chain continues with a full deployment with the subsequent `Fleet-Scheduler` and `Consul-Notifier`, finally ending with the GitHub Deployment Status API notifier.
+If it doesn't receive an event in the timeout, `FleetScheduler` and `ConsulNotifier` execute a quiet `Rollback` and the chain continues with a full deployment with the subsequent `FleetScheduler` and `ConsulNotifier`, finally ending with the GitHub Deployment Status API notifier.
+
+**Note:** Another cool example is you could have an `AWSScheduler` which checks if it is necessary to spin up a new instance before continuing with a deployment. The possibilities are endless with this light-weight framework.
 
 ```json
 {"web-chain":[
   {"hook": "git-deployment", "endpoint": "/web"},
-  {"puller": "git-puller", "allowed_host": "github.com"},
+  {"puller": "git-puller", "options": {"allowed_host": "github.com"}},
   {"builder": "docker-builder"},
-  {"scheduler": "fleet", "strategy": "canary",
-    "always_rollback": true, "then":
+  {"scheduler": "fleet", "options": {"strategy": "canary"},
+    "always_rollback": true, "chain":
     [
-      {"notifier": "consul", "service": "web",
-        "tags": ["canary"], "always_rollback": true,
-        "then": [
-          {"hook": "airbrake", "timeout": 600, "execute_rollback": true}
+      {"notifier": "consul", "always_rollback": true, "options": {
+        "service": "web",
+        "tags": ["canary"],
+        "chain": [
+          {"hook": "airbrake", "timeout": 600, "rollback_deployment": true}
         ]
-      }
+      }}
     ]
   },
-  {"scheduler": "fleet", "strategy": "full_replace", "then":
-    [
-      {"notifier": "github_deployment_status", "api_key": "xxx", "api_secret": "xxx"}
-    ]
-  }
+  {"scheduler": "fleet", "strategy": "full_replace"},
+  {"notifier": "github-deployment-status", "options": {
+    "api_key": "xxx",
+    "api_secret": "xxx"
+  }}
 ]}
 ```
 
-Another cool example is you could have an `AWSScheduler` which checks if it is neccessary to spin up a new instance before continuing with a deployment. The possibilities are endless with this light-weight framework.
+### Sub Chains
+Here, we used a "sub chain" by adding the "chain" attribute to the Scheduler. Any rollbacks that are triggered within Sub Chains will stop after rolling back the chain link that defined it. The rest of the chain will then continue as normal. The only exception is if a chain link has "rollback_deployment" set to `true`. In this case, a rollback triggered by this chain link will always cause a full rollback of the entire deployment chain.
+
+Sub Chains also allow for temporary chains, as in this case. When "always_rollback" is set to `true` on a chain link, it will "soft rollback" the chain link after complete execution, causing a rollback of that chain-link, but not the rest of the chain. If that chain link also has a Sub Chain, it will wait for that Sub Chain to complete before executing that soft rollback.
+
+### Variables
+In chain definitions, you have access to two kinds of variables:
+
+- Environment variables, prepended with `$ENV_`
+- Chain Link variables defined by previous links in the chain, prepended with `$<chain link name>_`. For example: `$DOCKER_SCHEDULER_NUM_HOSTS`.
