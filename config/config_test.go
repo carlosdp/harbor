@@ -61,3 +61,51 @@ func TestReadsBasicChain(t *testing.T) {
 		t.Fatal("should have parsed 4 chain links, parsed: ", len(chains))
 	}
 }
+
+func TestFailsUnlessStartsWithHook(t *testing.T) {
+	c := strings.NewReader(`
+    {"web-chain": [
+      {"puller": "fake-puller"},
+      {"hook": "fake-hook", "endpoint": "/hook"},
+      {"builder": "fake-builder"},
+      {"scheduler": "fake-scheduler"}
+    ]}
+	`)
+
+	_, err := config.ParseConfig(c)
+	if err == nil {
+		t.Fatal("should have returned error")
+	}
+}
+
+func TestFailsIfHookEndpointMissing(t *testing.T) {
+	c := strings.NewReader(`
+    {"web-chain": [
+      {"hook": "fake-hook"},
+      {"puller": "fake-puller"},
+      {"builder": "fake-builder"},
+      {"scheduler": "fake-scheduler"}
+    ]}
+	`)
+
+	_, err := config.ParseConfig(c)
+	if err == nil {
+		t.Fatal("should have returned error")
+	}
+}
+
+func TestFailsIfHookEndpointInvalid(t *testing.T) {
+	c := strings.NewReader(`
+    {"web-chain": [
+      {"hook": "fake-hook", "endpoint": 5},
+      {"puller": "fake-puller"},
+      {"builder": "fake-builder"},
+      {"scheduler": "fake-scheduler"}
+    ]}
+	`)
+
+	_, err := config.ParseConfig(c)
+	if err == nil {
+		t.Fatal("should have returned error")
+	}
+}

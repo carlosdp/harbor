@@ -59,10 +59,17 @@ func ParseConfig(configFile io.Reader) ([]*chain.Chain, error) {
 func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 	newChain := chain.NewChain()
 	newChain.Links = make([]*chain.Link, 0)
-	for _, linkDef := range linkDefs {
+	for i, linkDef := range linkDefs {
 		linkMap, ok := linkDef.(map[string]interface{})
 		if !ok {
 			return nil, errors.New("link def is not map")
+		}
+
+		if i == 0 {
+			_, ok = linkMap["hook"]
+			if !ok {
+				return nil, errors.New("chain must start with hook")
+			}
 		}
 
 		link := chain.NewLink()
