@@ -9,6 +9,7 @@ import (
 )
 
 func TestFailsOnEmptyConfig(t *testing.T) {
+	t.Parallel()
 	c := strings.NewReader("")
 
 	_, err := config.ParseConfig(c)
@@ -18,6 +19,7 @@ func TestFailsOnEmptyConfig(t *testing.T) {
 }
 
 func TestFailsWhenTopLevelIsArray(t *testing.T) {
+	t.Parallel()
 	c := strings.NewReader(`
     [
       {"hook": "fake-hook", "endpoint": "/hook"},
@@ -34,6 +36,7 @@ func TestFailsWhenTopLevelIsArray(t *testing.T) {
 }
 
 func TestReadsBasicChain(t *testing.T) {
+	t.Parallel()
 	c := strings.NewReader(`
     {"web-chain": [
       {"hook": "fake-hook", "endpoint": "/hook"},
@@ -63,6 +66,7 @@ func TestReadsBasicChain(t *testing.T) {
 }
 
 func TestFailsUnlessStartsWithHook(t *testing.T) {
+	t.Parallel()
 	c := strings.NewReader(`
     {"web-chain": [
       {"puller": "fake-puller"},
@@ -79,6 +83,7 @@ func TestFailsUnlessStartsWithHook(t *testing.T) {
 }
 
 func TestFailsIfHookEndpointMissing(t *testing.T) {
+	t.Parallel()
 	c := strings.NewReader(`
     {"web-chain": [
       {"hook": "fake-hook"},
@@ -95,6 +100,7 @@ func TestFailsIfHookEndpointMissing(t *testing.T) {
 }
 
 func TestFailsIfHookEndpointInvalid(t *testing.T) {
+	t.Parallel()
 	c := strings.NewReader(`
     {"web-chain": [
       {"hook": "fake-hook", "endpoint": 5},
