@@ -8,7 +8,7 @@ It allows you to define "Deployment Chains" in a declarative manner, like this:
   {"hook": "github-deployment", "endpoint": "web"},
   {"puller": "git-puller", "options": {"allowed_host": "github.com"}},
   {"builder": "docker-builder"},
-  {"scheduler": "docker-scheduler"},
+  {"scheduler": "docker-scheduler", "options": {"port": "3000-3999"}},
   {"notifier": "consul", "options": {"service": "web"}}
 ]}
 ```
@@ -118,3 +118,66 @@ In chain definitions, you have access to two kinds of variables:
 
 - Environment variables, prepended with `$ENV_`
 - Chain Link variables defined by previous links in the chain, prepended with `$<chain link name>_`. For example: `$DOCKER_SCHEDULER_NUM_HOSTS`.
+
+# Framework Design
+
+## Plugins
+### Options
+Every Chain Link type can have a map of "options" associated with it at configuration. These will be passed in with every call to the chain link as a `options.Options` parameter.
+
+The `Options` data structure allows for easy, type-safe access to the options passed into the JSON configuration. For example, the FleetScheduler has a "strategy" option that defines the method in which to deploy nodes. It accesses this parameter like this:
+
+*Note:* Here, FleetScheduler has named the passed in `options.Options` parameter in the `Execute` function "params".
+
+```go
+strategy := params.GetString("strategy")
+```
+
+`GetString` will either return the passed in string, or it will return an empty string in the event no parameter was passed in or it was of the wrong data type. If you want to explicitly check if the parameter was set, you would use the `String` function:
+
+```go
+strategy, ok := params.String("strategy")
+```
+
+In addition to strings, options can be integers:
+
+```go
+strategy := params.GetInt("strategy")
+```
+
+They could be an array of options:
+
+```go
+strategies := params.GetArray("strategy")
+
+for _, strategyOpt := range strategies {
+  strategy := strategyOpt.GetString()
+  ...
+}
+```
+
+or a map of strings to options:
+
+```go
+strategyMap := params.GetMap("strategy")
+
+for serviceName, strategyOpt := range strategyMap {
+  strategy := strategyOpt.GetString()
+  ...
+}
+```
+
+There are also some helpful pseudo-types we created that are useful for link configurations. For example, the `IntRange`:
+
+```json
+...
+{"scheduler": "docker-scheduler", "options": {"port": "3000-3999"}},
+...
+```
+
+```go
+min, max, ok := params.IntRange("port")
+if !ok {
+  min = max = params.GetInt("port")
+}
+```
