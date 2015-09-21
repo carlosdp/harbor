@@ -2,6 +2,8 @@ package chain
 
 import (
 	"errors"
+
+	"github.com/carlosdp/harbor/options"
 )
 
 // LinkType is an is an enum that identifies a link type.
@@ -38,9 +40,11 @@ type link interface {
 
 // Link is a link in the chain.
 type Link struct {
-	Link     link
-	Type     LinkType
-	SubChain *Chain
+	Link       link
+	Type       LinkType
+	Parameters options.Options
+	Options    options.Options
+	SubChain   *Chain
 }
 
 // Chain is a deployment chain.

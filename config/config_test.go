@@ -115,3 +115,60 @@ func TestFailsIfHookEndpointInvalid(t *testing.T) {
 		t.Fatal("should have returned error")
 	}
 }
+
+func TestParsesOptions(t *testing.T) {
+	t.Parallel()
+	c := strings.NewReader(`
+		{"web-chain": [
+			{"hook": "fake-hook", "endpoint": "fake", "options": {"test": "success"}}
+		]}
+	`)
+
+	chains, err := config.ParseConfig(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	link := chains[0].Links[0]
+	if link.Options.GetString("test") != "success" {
+		t.Fatal("option was not parsed correctly")
+	}
+}
+
+func TestIgnoresNonMapOptions(t *testing.T) {
+	t.Parallel()
+	c := strings.NewReader(`
+		{"web-chain": [
+			{"hook": "fake-hook", "endpoint": "fake", "options": "invalid"}
+		]}
+	`)
+
+	chains, err := config.ParseConfig(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	link := chains[0].Links[0]
+	if link.Parameters.GetString("options") != "" {
+		t.Fatal("should have ignored invalid options parameter")
+	}
+}
+
+func TestParsesParameters(t *testing.T) {
+	t.Parallel()
+	c := strings.NewReader(`
+		{"web-chain": [
+			{"hook": "fake-hook", "endpoint": "fake", "test": "success"}
+		]}
+	`)
+
+	chains, err := config.ParseConfig(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	link := chains[0].Links[0]
+	if link.Parameters.GetString("test") != "success" {
+		t.Fatal("paramter was not parsed correctly")
+	}
+}

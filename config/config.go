@@ -8,6 +8,7 @@ import (
 	"github.com/carlosdp/harbor/builder"
 	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/hook"
+	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/puller"
 	"github.com/carlosdp/harbor/scheduler"
 )
@@ -97,6 +98,7 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			hookWrap := hook.NewHook(name, hookInt, endpointStr)
 			link.Link = hookWrap
 			link.Type = chain.HOOK
+			delete(linkMap, "hook")
 		} else if _, ok = linkMap["puller"]; ok {
 			name, ok := linkMap["puller"].(string)
 			if !ok {
@@ -111,6 +113,7 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			pullerWrap := puller.NewPuller(name, pullerInt)
 			link.Link = pullerWrap
 			link.Type = chain.PULLER
+			delete(linkMap, "puller")
 		} else if _, ok = linkMap["builder"]; ok {
 			name, ok := linkMap["builder"].(string)
 			if !ok {
@@ -125,6 +128,7 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			builderWrap := builder.NewBuilder(name, builderInt)
 			link.Link = builderWrap
 			link.Type = chain.BUILDER
+			delete(linkMap, "builder")
 		} else if _, ok = linkMap["scheduler"]; ok {
 			name, ok := linkMap["scheduler"].(string)
 			if !ok {
@@ -139,10 +143,23 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			schedulerWrap := scheduler.NewScheduler(name, schedulerInt)
 			link.Link = schedulerWrap
 			link.Type = chain.SCHEDULER
+			delete(linkMap, "scheduler")
 		} else if _, ok = linkMap["notifier"]; ok {
+			delete(linkMap, "notifier")
 		} else {
 			return nil, errors.New("link type not recognized")
 		}
+
+		rawOps, ok := linkMap["options"]
+		if ok {
+			ops, ok := rawOps.(map[string]interface{})
+			if ok {
+				link.Options = options.NewOptions(ops)
+			}
+			delete(linkMap, "options")
+		}
+
+		link.Parameters = options.NewOptions(linkMap)
 
 		newChain.Links = append(newChain.Links, link)
 	}
