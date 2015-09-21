@@ -145,6 +145,12 @@ In addition to strings, options can be integers:
 strategy := params.GetInt("strategy")
 ```
 
+or booleans:
+
+```go
+strategy := params.GetBool("use_strategy")
+```
+
 They could be an array of options:
 
 ```go
