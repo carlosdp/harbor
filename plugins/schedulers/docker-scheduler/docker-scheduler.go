@@ -3,6 +3,7 @@ package dockerscheduler
 import (
 	"os"
 
+	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/scheduler"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -18,12 +19,12 @@ func (ds *dockerScheduler) New() scheduler.Scheduler {
 	return &dockerScheduler{}
 }
 
-func (ds *dockerScheduler) Schedule(image, name, id string) error {
+func (ds *dockerScheduler) Schedule(image, name, id string, ops options.Options) error {
 	err := createContainer(image, name+"-"+id)
 	return err
 }
 
-func (ds *dockerScheduler) Rollback(name, id string) error {
+func (ds *dockerScheduler) Rollback(name, id string, ops options.Options) error {
 	return nil
 }
 

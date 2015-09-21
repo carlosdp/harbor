@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/carlosdp/harbor/chain"
+	"github.com/carlosdp/harbor/options"
 )
 
 // RegisteredHooks contains the hooks registered with the Harbor build.
@@ -14,7 +15,7 @@ var RegisteredHooks = make(map[string]Hook)
 type Hook interface {
 	New() Hook
 	Name() string
-	HandleRequest(req *http.Request) error
+	HandleRequest(req *http.Request, ops options.Options) error
 	DeploymentID() string
 	URI() string
 }
@@ -44,13 +45,13 @@ func (hw *Wrapper) Name() string {
 }
 
 // Execute does nothing at the moment in a hook.
-func (hw *Wrapper) Execute(d chain.Deployment) error {
+func (hw *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
 	return nil
 }
 
 // HandleRequest handles an incoming web hook request.
-func (hw *Wrapper) HandleRequest(d chain.Deployment, req *http.Request) error {
-	err := hw.Hook.HandleRequest(req)
+func (hw *Wrapper) HandleRequest(d chain.Deployment, req *http.Request, ops options.Options) error {
+	err := hw.Hook.HandleRequest(req, ops)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (hw *Wrapper) HandleRequest(d chain.Deployment, req *http.Request) error {
 }
 
 // Rollback does nothing at the moment in a hook.
-func (hw *Wrapper) Rollback() error {
+func (hw *Wrapper) Rollback(ops options.Options) error {
 	return nil
 }
 

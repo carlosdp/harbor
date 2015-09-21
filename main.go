@@ -54,7 +54,7 @@ func main() {
 					return
 				}
 
-				err = hookWrap.HandleRequest(deploy, req)
+				err = hookWrap.HandleRequest(deploy, req, hookLink.Options)
 				if err != nil {
 					log.Errorf("[Deployment] %v", err)
 					return

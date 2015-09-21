@@ -34,8 +34,8 @@ type Deployment interface {
 
 type link interface {
 	Name() string
-	Execute(d Deployment) error
-	Rollback() error
+	Execute(d Deployment, ops options.Options) error
+	Rollback(ops options.Options) error
 }
 
 // Link is a link in the chain.

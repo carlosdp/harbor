@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/carlosdp/harbor/chain"
+	"github.com/carlosdp/harbor/options"
 )
 
 // RegisteredBuilders contains the builders registered with the Harbor build.
@@ -15,7 +16,7 @@ type Builder interface {
 	New() Builder
 	// Performs a build in the `workDir` source directory
 	// and outputing `image` image.
-	Build(workDir, image string) (string, error)
+	Build(workDir, image string, ops options.Options) (string, error)
 }
 
 // Wrapper is a wrapper struct for holding a
@@ -41,8 +42,8 @@ func (b *Wrapper) Name() string {
 }
 
 // Execute runs the build operation for a deployment chain.
-func (b *Wrapper) Execute(d chain.Deployment) error {
-	newImage, err := b.Builder.Build(d.WorkDir(), d.Image())
+func (b *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
+	newImage, err := b.Builder.Build(d.WorkDir(), d.Image(), ops)
 	if err == nil {
 		d.SetImage(newImage)
 	}
@@ -50,7 +51,7 @@ func (b *Wrapper) Execute(d chain.Deployment) error {
 }
 
 // Rollback does nothing at the moment in a builder.
-func (b *Wrapper) Rollback() error {
+func (b *Wrapper) Rollback(ops options.Options) error {
 	return nil
 }
 

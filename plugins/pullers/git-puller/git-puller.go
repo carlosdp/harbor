@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/puller"
 	git "gopkg.in/libgit2/git2go.v22"
 )
@@ -21,7 +22,7 @@ func (gp *gitPuller) New() puller.Puller {
 	return &gitPuller{}
 }
 
-func (gp *gitPuller) Pull(url, commitHash string) (string, error) {
+func (gp *gitPuller) Pull(url, commitHash string, ops options.Options) (string, error) {
 	timeStamp := strconv.FormatInt(time.Now().Unix(), 10)
 	path := os.TempDir() + timeStamp
 	repo, err := git.Clone(url, path, &git.CloneOptions{})

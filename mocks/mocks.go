@@ -5,6 +5,7 @@ import (
 
 	"github.com/carlosdp/harbor/builder"
 	"github.com/carlosdp/harbor/hook"
+	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/puller"
 	"github.com/carlosdp/harbor/scheduler"
 )
@@ -32,7 +33,7 @@ func (h *fakeHook) New() hook.Hook {
 	return &fakeHook{}
 }
 
-func (h *fakeHook) HandleRequest(req *http.Request) error {
+func (h *fakeHook) HandleRequest(req *http.Request, ops options.Options) error {
 	return nil
 }
 
@@ -52,7 +53,7 @@ func (p *fakePuller) New() puller.Puller {
 	return &fakePuller{}
 }
 
-func (p *fakePuller) Pull(uri, id string) (string, error) {
+func (p *fakePuller) Pull(uri, id string, ops options.Options) (string, error) {
 	return "", nil
 }
 
@@ -60,7 +61,7 @@ func (d *fakeBuilder) New() builder.Builder {
 	return &fakeBuilder{}
 }
 
-func (d *fakeBuilder) Build(workDir, image string) (string, error) {
+func (d *fakeBuilder) Build(workDir, image string, ops options.Options) (string, error) {
 	return "", nil
 }
 
@@ -68,10 +69,10 @@ func (s *fakeScheduler) New() scheduler.Scheduler {
 	return &fakeScheduler{}
 }
 
-func (s *fakeScheduler) Schedule(image, name, id string) error {
+func (s *fakeScheduler) Schedule(image, name, id string, ops options.Options) error {
 	return nil
 }
 
-func (s *fakeScheduler) Rollback(name, id string) error {
+func (s *fakeScheduler) Rollback(name, id string, ops options.Options) error {
 	return nil
 }

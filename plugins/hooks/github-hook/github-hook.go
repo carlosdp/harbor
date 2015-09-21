@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/carlosdp/harbor/hook"
+	"github.com/carlosdp/harbor/options"
 )
 
 type githubHook struct {
@@ -34,7 +35,7 @@ func (gh *githubHook) New() hook.Hook {
 	return &githubHook{}
 }
 
-func (gh *githubHook) HandleRequest(req *http.Request) error {
+func (gh *githubHook) HandleRequest(req *http.Request, ops options.Options) error {
 	decoder := json.NewDecoder(req.Body)
 	var r githubRequest
 	err := decoder.Decode(&r)

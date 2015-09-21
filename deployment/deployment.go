@@ -46,7 +46,7 @@ func (d *Deployment) Run() error {
 	for i := d.CurrentStep; i < len(d.Chain.Links)-n+1; i++ {
 		link := d.Chain.Links[i]
 		log.Info("Running ", link.Link.Name())
-		err := link.Link.Execute(d)
+		err := link.Link.Execute(d, link.Options)
 		if err != nil {
 			rerr := d.Rollback()
 			if rerr != nil {
@@ -73,7 +73,7 @@ func (d *Deployment) Rollback() error {
 
 	for i := d.CurrentStep; i > d.StartStep; i-- {
 		link := d.Chain.Links[i]
-		err := link.Link.Rollback()
+		err := link.Link.Rollback(link.Options)
 		if err != nil {
 			log.Error("Rollback unsuccessful: " + err.Error())
 			rerr = err

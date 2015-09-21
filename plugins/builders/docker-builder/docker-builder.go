@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/carlosdp/harbor/builder"
+	"github.com/carlosdp/harbor/options"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -24,7 +25,7 @@ func (db *dockerBuilder) New() builder.Builder {
 	return &dockerBuilder{}
 }
 
-func (db *dockerBuilder) Build(workDir, image string) (string, error) {
+func (db *dockerBuilder) Build(workDir, image string, ops options.Options) (string, error) {
 	image, err := createImage(workDir, image)
 	if err != nil {
 		return "", err

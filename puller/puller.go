@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/carlosdp/harbor/chain"
+	"github.com/carlosdp/harbor/options"
 )
 
 // RegisteredPullers contains the pullers registered with the Harbor build.
@@ -12,7 +13,7 @@ var RegisteredPullers = make(map[string]Puller)
 // Puller describes an interface for a Harbor Puller.
 type Puller interface {
 	New() Puller
-	Pull(uri, id string) (string, error)
+	Pull(uri, id string, ops options.Options) (string, error)
 }
 
 // Wrapper is a wrapper struct for holding a
@@ -38,8 +39,8 @@ func (p *Wrapper) Name() string {
 }
 
 // Execute runs the pull operation for a deployment chain.
-func (p *Wrapper) Execute(d chain.Deployment) error {
-	workDir, err := p.Puller.Pull(d.URI(), d.ID())
+func (p *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
+	workDir, err := p.Puller.Pull(d.URI(), d.ID(), ops)
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func (p *Wrapper) Execute(d chain.Deployment) error {
 }
 
 // Rollback does nothing at the moment in a puller.
-func (p *Wrapper) Rollback() error {
+func (p *Wrapper) Rollback(ops options.Options) error {
 	return nil
 }
 
