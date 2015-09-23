@@ -35,7 +35,12 @@ func (gp *gitPuller) Pull(url, commitHash string, ops options.Options) (string, 
 		return "", err
 	}
 
-	tree, err := repo.LookupTree(oid)
+	commit, err := repo.LookupCommit(oid)
+	if err != nil {
+		return "", err
+	}
+
+	tree, err := commit.Tree()
 	if err != nil {
 		return "", err
 	}

@@ -47,7 +47,7 @@ func (gh *githubHook) Start(mux *http.ServeMux, queue chan<- hook.Request, ops o
 
 		res.WriteHeader(200)
 
-		request := hook.NewRequest(r.Repo.FullName, r.Repo.SSHURL, r.CommitID, "")
+		request := hook.NewRequest(r.Repo.FullName, r.CommitID, r.Repo.SSHURL, r.Repo.FullName+"-"+r.CommitID)
 		queue <- request
 	})
 

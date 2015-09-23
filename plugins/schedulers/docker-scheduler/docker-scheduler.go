@@ -2,6 +2,7 @@ package dockerscheduler
 
 import (
 	"os"
+	"strings"
 
 	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/scheduler"
@@ -20,6 +21,7 @@ func (ds *dockerScheduler) New() scheduler.Scheduler {
 }
 
 func (ds *dockerScheduler) Schedule(image, name, id string, ops options.Options) error {
+	name = strings.Replace(name, "/", "-", -1)
 	err := createContainer(image, name+"-"+id)
 	return err
 }
