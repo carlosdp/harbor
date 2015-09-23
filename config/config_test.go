@@ -82,40 +82,6 @@ func TestFailsUnlessStartsWithHook(t *testing.T) {
 	}
 }
 
-func TestFailsIfHookEndpointMissing(t *testing.T) {
-	t.Parallel()
-	c := strings.NewReader(`
-    {"web-chain": [
-      {"hook": "fake-hook"},
-      {"puller": "fake-puller"},
-      {"builder": "fake-builder"},
-      {"scheduler": "fake-scheduler"}
-    ]}
-	`)
-
-	_, err := config.ParseConfig(c)
-	if err == nil {
-		t.Fatal("should have returned error")
-	}
-}
-
-func TestFailsIfHookEndpointInvalid(t *testing.T) {
-	t.Parallel()
-	c := strings.NewReader(`
-    {"web-chain": [
-      {"hook": "fake-hook", "endpoint": 5},
-      {"puller": "fake-puller"},
-      {"builder": "fake-builder"},
-      {"scheduler": "fake-scheduler"}
-    ]}
-	`)
-
-	_, err := config.ParseConfig(c)
-	if err == nil {
-		t.Fatal("should have returned error")
-	}
-}
-
 func TestParsesOptions(t *testing.T) {
 	t.Parallel()
 	c := strings.NewReader(`

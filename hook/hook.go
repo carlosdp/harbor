@@ -15,7 +15,7 @@ var RegisteredHooks = make(map[string]Hook)
 type Hook interface {
 	New() Hook
 	Name() string
-	HandleRequest(req *http.Request, ops options.Options) error
+	Start(mux *http.ServeMux, queue chan<- Request, ops options.Options) error
 	DeploymentID() string
 	URI() string
 }
@@ -23,17 +23,35 @@ type Hook interface {
 // Wrapper is a wrapper struct for holding a
 // names Hook in the registry.
 type Wrapper struct {
-	name     string
-	Endpoint string
-	Hook     Hook
+	name string
+	Hook Hook
+}
+
+// Request is a request object sent to the deployment runner by a hook.
+type Request struct {
+	Name         string
+	DeploymentID string
+	URI          string
+	Image        string
+	Chain        *chain.Chain
+	Link         *chain.Link
+}
+
+// NewRequest creates a new hook request.
+func NewRequest(name, id, uri, image string) Request {
+	return Request{
+		Name:         name,
+		DeploymentID: id,
+		URI:          uri,
+		Image:        image,
+	}
 }
 
 // NewHook wraps a hook and returns a hook Wrapper.
-func NewHook(name string, hook Hook, endpoint string) *Wrapper {
+func NewHook(name string, hook Hook) *Wrapper {
 	hookWrap := &Wrapper{
-		name:     name,
-		Hook:     hook.New(),
-		Endpoint: endpoint,
+		name: name,
+		Hook: hook.New(),
 	}
 
 	return hookWrap
@@ -49,18 +67,19 @@ func (hw *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
 	return nil
 }
 
-// HandleRequest handles an incoming web hook request.
-func (hw *Wrapper) HandleRequest(d chain.Deployment, req *http.Request, ops options.Options) error {
-	err := hw.Hook.HandleRequest(req, ops)
-	if err != nil {
-		return err
-	}
+// Start starts up the hook with the given channel for passing deployment information.
+func (hw *Wrapper) Start(mux *http.ServeMux, queue chan<- Request, ops options.Options, c *chain.Chain, link *chain.Link) {
+	q := make(chan Request)
+	go hw.Hook.Start(mux, q, ops)
 
-	d.SetName(hw.Hook.Name())
-	d.SetURI(hw.Hook.URI())
-	d.SetID(hw.Hook.DeploymentID())
-	d.SetImage(hw.Hook.Name() + "-" + hw.Hook.DeploymentID())
-	return nil
+	for {
+		select {
+		case r := <-q:
+			r.Chain = c
+			r.Link = link
+			queue <- r
+		}
+	}
 }
 
 // Rollback does nothing at the moment in a hook.

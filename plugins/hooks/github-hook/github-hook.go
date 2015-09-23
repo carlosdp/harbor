@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 
+	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/hook"
 	"github.com/carlosdp/harbor/options"
 )
@@ -35,17 +36,20 @@ func (gh *githubHook) New() hook.Hook {
 	return &githubHook{}
 }
 
-func (gh *githubHook) HandleRequest(req *http.Request, ops options.Options) error {
-	decoder := json.NewDecoder(req.Body)
-	var r githubRequest
-	err := decoder.Decode(&r)
-	if err != nil {
-		return err
-	}
+func (gh *githubHook) Start(mux *http.ServeMux, queue chan<- hook.Request, ops options.Options) error {
+	mux.HandleFunc(ops.GetString("endpoint"), func(res http.ResponseWriter, req *http.Request) {
+		decoder := json.NewDecoder(req.Body)
+		var r githubRequest
+		err := decoder.Decode(&r)
+		if err != nil {
+			log.Error(err)
+		}
 
-	gh.FullName = r.Repo.FullName
-	gh.RepoURL = r.Repo.SSHURL
-	gh.CommitHash = r.CommitID
+		res.WriteHeader(200)
+
+		request := hook.NewRequest(r.Repo.FullName, r.Repo.SSHURL, r.CommitID, "")
+		queue <- request
+	})
 
 	return nil
 }

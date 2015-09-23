@@ -85,17 +85,7 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 				return nil, err
 			}
 
-			endpoint, ok := linkMap["endpoint"]
-			if !ok {
-				return nil, errors.New("hook needs endpoint")
-			}
-
-			endpointStr, ok := endpoint.(string)
-			if !ok {
-				return nil, errors.New("endpoint needs to be string")
-			}
-
-			hookWrap := hook.NewHook(name, hookInt, endpointStr)
+			hookWrap := hook.NewHook(name, hookInt)
 			link.Link = hookWrap
 			link.Type = chain.HOOK
 			delete(linkMap, "hook")

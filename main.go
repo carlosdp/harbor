@@ -39,6 +39,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	requestChan := make(chan hook.Request)
 
 	for _, c := range chains {
 		log.Infof("[%v] Loading chain", c.Name)
@@ -47,29 +48,7 @@ func main() {
 		}
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.Link.(*hook.Wrapper)
-			mux.HandleFunc(hookWrap.Endpoint, func(res http.ResponseWriter, req *http.Request) {
-				deploy, err := deployment.NewDeployment(c, hookLink)
-				if err != nil {
-					log.Errorf("[Deployment] %v", err)
-					return
-				}
-
-				err = hookWrap.HandleRequest(deploy, req, hookLink.Options)
-				if err != nil {
-					log.Errorf("[Deployment] %v", err)
-					return
-				}
-
-				go func() {
-					err := deploy.Run()
-					if err != nil {
-						log.Errorf("[Deployment] %v", err)
-						return
-					}
-				}()
-
-				res.WriteHeader(200)
-			})
+			go hookWrap.Start(mux, requestChan, hookLink.Options, c, hookLink)
 		}
 	}
 
@@ -79,5 +58,28 @@ func main() {
 	}
 
 	log.Info("Starting Server")
-	server.ListenAndServe()
+	go server.ListenAndServe()
+
+	for {
+		select {
+		case request := <-requestChan:
+			deploy, err := deployment.NewDeployment(request.Chain, request.Link)
+			if err != nil {
+				log.Errorf("[Deployment] %v", err)
+				return
+			}
+			deploy.SetName(request.Name)
+			deploy.SetID(request.DeploymentID)
+			deploy.SetURI(request.URI)
+			deploy.SetImage(request.Image)
+
+			go func(deploy *deployment.Deployment) {
+				err := deploy.Run()
+				if err != nil {
+					log.Errorf("[Deployment] %v", err)
+					return
+				}
+			}(deploy)
+		}
+	}
 }

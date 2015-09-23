@@ -33,7 +33,7 @@ func (h *fakeHook) New() hook.Hook {
 	return &fakeHook{}
 }
 
-func (h *fakeHook) HandleRequest(req *http.Request, ops options.Options) error {
+func (h *fakeHook) Start(mux *http.ServeMux, queue chan<- hook.Request, ops options.Options) error {
 	return nil
 }
 
