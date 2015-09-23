@@ -119,6 +119,27 @@ In chain definitions, you have access to two kinds of variables:
 - Environment variables, prepended with `$ENV_`
 - Chain Link variables defined by previous links in the chain, prepended with `$<chain link name>_`. For example: `$DOCKER_SCHEDULER_NUM_HOSTS`.
 
+## Harbor CLI
+Harbor ships with a special hook called `harbor-cli-hook`. It allows you to make chains that are initiated directly via the command line using the `harbor` executable.
+
+```json
+{"web-chain":[
+  {"hook": "harbor-cli-hook", "command": "cluster-tests"},
+  {"builder": "jenkins-builder", "options": {
+    "repo": "git@github.com:$HARBOR_CLI_REPO",
+    "branch": "$HARBOR_CLI_BRANCH"
+  }}
+]}
+```
+
+The HarborCLIHook populates its variables with the flag arguments it receives on the command line. So here, we can run:
+
+```bash
+> harbor cluster-tests -repo carlosdp/test-app -branch new-feature
+```
+
+Harbor will put the argument to `-repo` in `$HARBOR_CLI_REPO` and `-branch` in `$HARBOR_CLI_BRANCH`.
+
 # Framework Design
 
 ## Plugins
