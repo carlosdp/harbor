@@ -113,6 +113,21 @@ Here, we used a "sub chain" by adding the "chain" attribute to the Scheduler. An
 
 Sub Chains also allow for temporary chains, as in this case. When "always_rollback" is set to `true` on a chain link, it will "soft rollback" the chain link after complete execution, causing a rollback of that chain-link, but not the rest of the chain. If that chain link also has a Sub Chain, it will wait for that Sub Chain to complete before executing that soft rollback.
 
+### Automatic Rollbacks of Previous Deploys
+Harbor keeps track of deployments it executes and rolls-back old deployments upon successful new deployments, automatically. Sometimes, however, you want to keep the last version of a node up (but out of the load balancer or inactive) for speedy rollbacks. You can tell Harbor to stop at a certain point of the chain during a rollback, and keep X previous deployments by specifying `keep: X` on a chain link. For example, I could keep the last deploy as an active Docker container, but take it out of the load balancer, using this chain:
+
+```json
+{"web-chain": [
+  {"hook": "github-deployment", "endpoint": "web"},
+  {"puller": "git-puller", "options": {"allowed_host": "github.com"}},
+  {"builder": "docker-builder"},
+  {"scheduler": "docker-scheduler", "keep": 1, "options": {"port": "3000-3999"}},
+  {"notifier": "consul", "options": {"service": "web"}}
+]}
+```
+
+During a new deployment, Harbor will run the chain, grab the last deployment, rollback the ConsulNotifier for that deployment (taking it out of Consul's service discovery), and stop at the DockerScheduler. Next time I deploy a chain, this old deploy will be run through the DockerScheduler rollback, and the rest of the chain.
+
 ### Variables
 In chain definitions, you have access to two kinds of variables:
 
