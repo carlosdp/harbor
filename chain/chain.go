@@ -30,12 +30,14 @@ type Deployment interface {
 	SetID(id string)
 	SetWorkDir(workDir string)
 	SetImage(image string)
+	SetState(linkName string, state interface{})
+	GetState(linkName string) options.Option
 }
 
 type link interface {
 	Name() string
 	Execute(d Deployment, ops options.Options) error
-	Rollback(ops options.Options) error
+	Rollback(d Deployment, ops options.Options) error
 }
 
 // Link is a link in the chain.
@@ -49,8 +51,9 @@ type Link struct {
 
 // Chain is a deployment chain.
 type Chain struct {
-	Name  string
-	Links []*Link
+	Name              string
+	Links             []*Link
+	ActiveDeployments []Deployment
 }
 
 // NewChain returns an empty deployment chain.

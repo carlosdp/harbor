@@ -69,10 +69,10 @@ func (s *fakeScheduler) New() scheduler.Scheduler {
 	return &fakeScheduler{}
 }
 
-func (s *fakeScheduler) Schedule(image, name, id string, ops options.Options) error {
-	return nil
+func (s *fakeScheduler) Schedule(image, name, id string, ops options.Options) (interface{}, error) {
+	return nil, nil
 }
 
-func (s *fakeScheduler) Rollback(name, id string, ops options.Options) error {
+func (s *fakeScheduler) Rollback(name, id string, ops options.Options, state options.Option) error {
 	return nil
 }

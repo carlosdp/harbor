@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
+	"github.com/carlosdp/harbor/options"
 )
 
 // Deployment is a single deployment that can be run.
@@ -13,12 +14,14 @@ type Deployment struct {
 	StartStep      int
 	CurrentStep    int
 	CompletedLinks []*chain.Link
+	State          map[string]interface{}
 
 	uri     string
 	name    string
 	id      string
 	workDir string
 	image   string
+	failure bool
 }
 
 // NewDeployment creates a deployment from a `chain` and `hookLink`
@@ -34,6 +37,7 @@ func NewDeployment(dChain *chain.Chain, hookLink *chain.Link) (*Deployment, erro
 		StartStep:      currentStep,
 		CurrentStep:    currentStep + 1,
 		CompletedLinks: make([]*chain.Link, 0),
+		State:          make(map[string]interface{}),
 	}
 
 	return d, nil
@@ -48,6 +52,7 @@ func (d *Deployment) Run() error {
 		log.Info("Running ", link.Link.Name())
 		err := link.Link.Execute(d, link.Options)
 		if err != nil {
+			d.failure = true
 			rerr := d.Rollback()
 			if rerr != nil {
 				return errors.New("Deployment failed: " + err.Error() + ", Failed to Rollback: " + rerr.Error())
@@ -61,6 +66,24 @@ func (d *Deployment) Run() error {
 		d.CurrentStep++
 	}
 
+	log.Infof("Deployment %v complete, rolling back active deployments", d.ID())
+
+	activeDeploys := d.Chain.ActiveDeployments
+
+	for _, deploy := range activeDeploys {
+		dp, ok := deploy.(*Deployment)
+		if !ok {
+			log.Error("Invalid deployment in deployment log")
+		}
+
+		log.Infof("Rolling back deployment %v", dp.ID())
+		dp.Rollback()
+	}
+
+	d.Chain.ActiveDeployments = append(d.Chain.ActiveDeployments, d)
+
+	log.Info("Deployment chain complete")
+
 	return nil
 }
 
@@ -70,14 +93,24 @@ func (d *Deployment) Rollback() error {
 	d.CurrentStep--
 
 	var rerr error
+	index := d.GetIndex()
 
 	for i := d.CurrentStep; i > d.StartStep; i-- {
 		link := d.Chain.Links[i]
-		err := link.Link.Rollback(link.Options)
+		keep := link.Parameters.GetInt("keep")
+		if !d.failure && keep > 0 && len(d.Chain.ActiveDeployments) > keep && index > keep {
+			return rerr
+		}
+		err := link.Link.Rollback(d, link.Options)
 		if err != nil {
 			log.Error("Rollback unsuccessful: " + err.Error())
 			rerr = err
 		}
+		d.CurrentStep--
+	}
+
+	if !d.failure && index >= 0 {
+		d.Chain.ActiveDeployments = append(d.Chain.ActiveDeployments[:index], d.Chain.ActiveDeployments[index+1:]...)
 	}
 
 	return rerr
@@ -134,4 +167,30 @@ func (d *Deployment) SetWorkDir(workDir string) {
 // SetImage sets the image identifier for the built artifact.
 func (d *Deployment) SetImage(image string) {
 	d.image = image
+}
+
+// GetIndex indicates where the deployment lies in the deployment log.
+func (d *Deployment) GetIndex() int {
+	for i, dp := range d.Chain.ActiveDeployments {
+		if dp.Name() == d.Name() && dp.ID() == d.ID() {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// SetState sets the state for a link in a chain for use in a rollback.
+func (d *Deployment) SetState(linkName string, state interface{}) {
+	d.State[linkName] = state
+}
+
+// GetState gets the state for a link as an option.Option.
+func (d *Deployment) GetState(linkName string) options.Option {
+	state, ok := d.State[linkName]
+	if !ok {
+		return options.NewOption(nil)
+	}
+
+	return options.NewOption(state)
 }

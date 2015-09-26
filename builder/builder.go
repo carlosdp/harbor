@@ -51,7 +51,7 @@ func (b *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
 }
 
 // Rollback does nothing at the moment in a builder.
-func (b *Wrapper) Rollback(ops options.Options) error {
+func (b *Wrapper) Rollback(d chain.Deployment, ops options.Options) error {
 	return nil
 }
 
