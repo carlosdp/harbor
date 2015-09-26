@@ -223,3 +223,35 @@ if !ok {
   min = max = params.GetInt("port")
 }
 ```
+
+### State
+While Harbor enforces compatibility between all links by rigidly defining what data each link has access to (name, image name, deployment ID), some links create more than one resource, which makes tracking the resources it created complicated using just conventions derived from the provided data. For example, a FleetScheduler may be configured to create multiple instances for each deployment, maybe across multiple cloud providers, regions, and hosts. When we execute an automatic rollback when launching a new deployment, the link needs to know where all these resources it created lie.
+
+That information can be encoded in the return value of `Schedule` and `Notify` for schedulers and notifiers (hooks, builders, and pullers do nothing on rollbacks):
+
+```go
+func (m myScheduler) Schedule(image, name, id string, ops options.Options) (interface{}, error) {
+  ...
+  instances := []string {"i23433-3", "ie4t5g55g-2", "ir39r944"}
+  return instances, nil
+}
+```
+
+This return value of `interface{}` type is known as the link's "state". It is a generic interface to allow plugin writers to pass any type of information that makes sense, from a string with a container ID, to a slice of instance IDs (as we show here), to a map that contains hosts mapping to the containers on each host. This state is passed to the `Rollback` function as a `option.Option`:
+
+```go
+func (m myScheduler) Rollback(name, id string, ops options.Options, state options.Option) error {
+  instances := state.GetArray()
+
+  for _, instanceOpt := range instances {
+    instanceID := instanceOpt.GetString()
+    ...
+  }
+
+  return nil
+}
+```
+
+State is persisted by Harbor, so even in the event Harbor is rebooted, it will remember the state of each link.
+
+**Note:** State cannot be modified during a rollback. That means that if a rollback partially fails, the next time `Rollback` is run, it needs to account for the fact that some resources in the state my have already been rolled back. In other words, `Rollback` needs to be an idempotent operation.
