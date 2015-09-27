@@ -81,13 +81,14 @@ func (c *Chain) LinkPosition(link *Link) (int, error) {
 }
 
 // Persist dumps the state of all active deployments to disc.
-func (c *Chain) Persist() {
+func (c *Chain) Persist(dataPath string) {
+	path := dataPath + c.Name + ".json"
 	output, err := json.Marshal(c.ActiveDeployments)
 	if err != nil {
 		log.Errorf("[%v] Could not store chain state: %v", c.Name, err)
 	}
 
-	f, err := os.Create(c.Name + ".json")
+	f, err := os.Create(path)
 	if err != nil {
 		log.Errorf("[%v] Could not store chain state: %v", c.Name, err)
 	}
@@ -96,11 +97,12 @@ func (c *Chain) Persist() {
 }
 
 // Load loads the state of active deployments from disc.
-func (c *Chain) Load() {
-	if _, err := os.Stat(c.Name + ".json"); os.IsNotExist(err) {
+func (c *Chain) Load(dataPath string) {
+	path := dataPath + c.Name + ".json"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return
 	}
-	f, err := os.Open(c.Name + ".json")
+	f, err := os.Open(path)
 	if err != nil {
 		log.Errorf("[%v] Could not load chain state: %v", c.Name, err)
 	}

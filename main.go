@@ -4,6 +4,7 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"path"
 
 	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
@@ -13,14 +14,21 @@ import (
 
 var port string
 var configPath string
+var dataPath string
 
 func init() {
-	flag.StringVar(&port, "p", "3001", "The port webhooks should listen on.")
-	flag.StringVar(&configPath, "c", "", "Path to chain config file")
+	flag.StringVar(&port, "p", "3001", "Port webhooks should listen on.")
+	flag.StringVar(&configPath, "c", "", "Path to chain config file.")
+	flag.StringVar(&dataPath, "data", "", "Path where persistence data should be stored.")
 }
 
 func main() {
 	flag.Parse()
+
+	dataPath = path.Clean(dataPath)
+	if dataPath != "/" {
+		dataPath = dataPath + "/"
+	}
 
 	if configPath == "" {
 		log.Error("[Config] You must specify a config file with -c")
@@ -46,7 +54,7 @@ func main() {
 			log.Infof("[%v] Link loaded: %v", c.Name, link.Link.Name())
 		}
 
-		c.Load()
+		c.Load(dataPath)
 
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.Link.(*hook.Wrapper)
@@ -81,7 +89,7 @@ func main() {
 					log.Errorf("[Deployment] %v", err)
 					return
 				}
-				deploy.Chain.Persist()
+				deploy.Chain.Persist(dataPath)
 			}(deploy)
 		}
 	}
