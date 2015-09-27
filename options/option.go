@@ -47,12 +47,12 @@ func (o Option) GetInt() int {
 // Int returns the int value of the option and a bool indicating if the option
 // is a valid int.
 func (o Option) Int() (int, bool) {
-	i, ok := o.raw.(int)
+	i, ok := o.raw.(float64)
 	if !ok {
 		return -1, false
 	}
 
-	return i, true
+	return int(i), true
 }
 
 // GetBool returns the boolean value of the option.

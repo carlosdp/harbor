@@ -21,7 +21,7 @@ func TestWrapsString(t *testing.T) {
 func TestWrapsInt(t *testing.T) {
 	t.Parallel()
 	mi := map[string]interface{}{
-		"test": 5,
+		"test": 5.0,
 	}
 
 	ops := options.NewOptions(mi)

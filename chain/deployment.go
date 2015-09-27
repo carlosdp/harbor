@@ -90,7 +90,7 @@ func (d *Deployment) Rollback() error {
 	for i := d.CurrentStep; i > d.StartStep; i-- {
 		link := d.Chain.Links[i]
 		keep := link.Parameters.GetInt("keep")
-		if !d.failure && keep > 0 && len(d.Chain.ActiveDeployments) > keep && index > keep {
+		if !d.failure && keep > 0 && len(d.Chain.ActiveDeployments) >= keep && index < keep {
 			return rerr
 		}
 		err := link.Link.Rollback(d, link.Options)
