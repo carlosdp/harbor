@@ -25,7 +25,8 @@ func TestFailsWhenTopLevelIsArray(t *testing.T) {
       {"hook": "fake-hook", "endpoint": "/hook"},
       {"puller": "fake-puller"},
       {"builder": "fake-builder"},
-      {"scheduler": "fake-scheduler"}
+      {"scheduler": "fake-scheduler"},
+			{"notifier": "fake-notifier"}
     ]
   `)
 
@@ -42,7 +43,8 @@ func TestReadsBasicChain(t *testing.T) {
       {"hook": "fake-hook", "endpoint": "/hook"},
       {"puller": "fake-puller"},
       {"builder": "fake-builder"},
-      {"scheduler": "fake-scheduler"}
+      {"scheduler": "fake-scheduler"},
+			{"notifier": "fake-notifier"}
     ]}
   `)
 
@@ -60,8 +62,8 @@ func TestReadsBasicChain(t *testing.T) {
 		t.Fatal("could not find parsed chain")
 	}
 
-	if len(chain.Links) != 4 {
-		t.Fatal("should have parsed 4 chain links, parsed: ", len(chains))
+	if len(chain.Links) != 5 {
+		t.Fatal("should have parsed 5 chain links, parsed: ", len(chain.Links))
 	}
 }
 
@@ -72,7 +74,8 @@ func TestFailsUnlessStartsWithHook(t *testing.T) {
       {"puller": "fake-puller"},
       {"hook": "fake-hook", "endpoint": "/hook"},
       {"builder": "fake-builder"},
-      {"scheduler": "fake-scheduler"}
+      {"scheduler": "fake-scheduler"},
+			{"notifier": "fake-notifier"}
     ]}
 	`)
 
@@ -135,6 +138,6 @@ func TestParsesParameters(t *testing.T) {
 
 	link := chains[0].Links[0]
 	if link.Parameters.GetString("test") != "success" {
-		t.Fatal("paramter was not parsed correctly")
+		t.Fatal("parameter was not parsed correctly")
 	}
 }

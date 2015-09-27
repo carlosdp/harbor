@@ -8,6 +8,7 @@ import (
 	"github.com/carlosdp/harbor/builder"
 	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/hook"
+	"github.com/carlosdp/harbor/notifier"
 	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/puller"
 	"github.com/carlosdp/harbor/scheduler"
@@ -135,6 +136,19 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 			link.Type = chain.SCHEDULER
 			delete(linkMap, "scheduler")
 		} else if _, ok = linkMap["notifier"]; ok {
+			name, ok := linkMap["notifier"].(string)
+			if !ok {
+				return nil, errors.New("notifier does not have name")
+			}
+
+			notifierInt, err := notifier.GetNotifier(name)
+			if err != nil {
+				return nil, err
+			}
+
+			notifierWrap := notifier.NewNotifier(name, notifierInt)
+			link.Link = notifierWrap
+			link.Type = chain.NOTIFIER
 			delete(linkMap, "notifier")
 		} else {
 			return nil, errors.New("link type not recognized")

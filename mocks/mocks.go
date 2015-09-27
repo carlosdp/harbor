@@ -5,6 +5,7 @@ import (
 
 	"github.com/carlosdp/harbor/builder"
 	"github.com/carlosdp/harbor/hook"
+	"github.com/carlosdp/harbor/notifier"
 	"github.com/carlosdp/harbor/options"
 	"github.com/carlosdp/harbor/puller"
 	"github.com/carlosdp/harbor/scheduler"
@@ -22,11 +23,15 @@ type fakeBuilder struct {
 type fakeScheduler struct {
 }
 
+type fakeNotifier struct {
+}
+
 func init() {
 	hook.RegisterHook("fake-hook", &fakeHook{})
 	puller.RegisterPuller("fake-puller", &fakePuller{})
 	builder.RegisterBuilder("fake-builder", &fakeBuilder{})
 	scheduler.RegisterScheduler("fake-scheduler", &fakeScheduler{})
+	notifier.RegisterNotifier("fake-notifier", &fakeNotifier{})
 }
 
 func (h *fakeHook) New() hook.Hook {
@@ -74,5 +79,17 @@ func (s *fakeScheduler) Schedule(image, name, id string, ops options.Options) (i
 }
 
 func (s *fakeScheduler) Rollback(name, id string, ops options.Options, state options.Option) error {
+	return nil
+}
+
+func (n *fakeNotifier) New() notifier.Notifier {
+	return &fakeNotifier{}
+}
+
+func (n *fakeNotifier) Notify(name, id string, ops options.Options) (interface{}, error) {
+	return nil, nil
+}
+
+func (n *fakeNotifier) Rollback(name, id string, ops options.Options, state options.Option) error {
 	return nil
 }
