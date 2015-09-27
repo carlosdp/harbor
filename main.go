@@ -4,24 +4,31 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"path"
 
 	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/config"
-	"github.com/carlosdp/harbor/deployment"
 	"github.com/carlosdp/harbor/hook"
 )
 
 var port string
 var configPath string
+var dataPath string
 
 func init() {
-	flag.StringVar(&port, "p", "3001", "The port webhooks should listen on.")
-	flag.StringVar(&configPath, "c", "", "Path to chain config file")
+	flag.StringVar(&port, "p", "3001", "Port webhooks should listen on.")
+	flag.StringVar(&configPath, "c", "", "Path to chain config file.")
+	flag.StringVar(&dataPath, "data", "", "Path where persistence data should be stored.")
 }
 
 func main() {
 	flag.Parse()
+
+	dataPath = path.Clean(dataPath)
+	if dataPath != "/" {
+		dataPath = dataPath + "/"
+	}
 
 	if configPath == "" {
 		log.Error("[Config] You must specify a config file with -c")
@@ -46,6 +53,9 @@ func main() {
 		for _, link := range c.Links {
 			log.Infof("[%v] Link loaded: %v", c.Name, link.Link.Name())
 		}
+
+		c.Load(dataPath)
+
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.Link.(*hook.Wrapper)
 			go hookWrap.Start(mux, requestChan, hookLink.Options, c, hookLink)
@@ -63,7 +73,7 @@ func main() {
 	for {
 		select {
 		case request := <-requestChan:
-			deploy, err := deployment.NewDeployment(request.Chain, request.Link)
+			deploy, err := chain.NewDeployment(request.Chain, request.Link)
 			if err != nil {
 				log.Errorf("[Deployment] %v", err)
 				return
@@ -73,12 +83,13 @@ func main() {
 			deploy.SetURI(request.URI)
 			deploy.SetImage(request.Image)
 
-			go func(deploy *deployment.Deployment) {
+			go func(deploy *chain.Deployment) {
 				err := deploy.Run()
 				if err != nil {
 					log.Errorf("[Deployment] %v", err)
 					return
 				}
+				deploy.Chain.Persist(dataPath)
 			}(deploy)
 		}
 	}

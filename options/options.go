@@ -62,12 +62,12 @@ func (o options) Int(key string) (int, bool) {
 		return -1, false
 	}
 
-	i, ok := obj.(int)
+	i, ok := obj.(float64)
 	if !ok {
 		return -1, false
 	}
 
-	return i, true
+	return int(i), true
 }
 
 func (o options) GetBool(key string) bool {

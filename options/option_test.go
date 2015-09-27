@@ -18,7 +18,7 @@ func TestOptionWrapsString(t *testing.T) {
 
 func TestOptionWrapsInt(t *testing.T) {
 	t.Parallel()
-	i := interface{}(5)
+	i := interface{}(5.0)
 
 	op := options.NewOption(i)
 	if op.GetInt() != 5 {

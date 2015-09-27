@@ -39,8 +39,8 @@ func (p *Wrapper) Name() string {
 }
 
 // Execute runs the pull operation for a deployment chain.
-func (p *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
-	workDir, err := p.Puller.Pull(d.URI(), d.ID(), ops)
+func (p *Wrapper) Execute(d *chain.Deployment, ops options.Options) error {
+	workDir, err := p.Puller.Pull(d.URI, d.ID, ops)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (p *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
 }
 
 // Rollback does nothing at the moment in a puller.
-func (p *Wrapper) Rollback(ops options.Options) error {
+func (p *Wrapper) Rollback(d *chain.Deployment, ops options.Options) error {
 	return nil
 }
 

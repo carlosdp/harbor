@@ -113,6 +113,21 @@ Here, we used a "sub chain" by adding the "chain" attribute to the Scheduler. An
 
 Sub Chains also allow for temporary chains, as in this case. When "always_rollback" is set to `true` on a chain link, it will "soft rollback" the chain link after complete execution, causing a rollback of that chain-link, but not the rest of the chain. If that chain link also has a Sub Chain, it will wait for that Sub Chain to complete before executing that soft rollback.
 
+### Automatic Rollbacks of Previous Deploys
+Harbor keeps track of deployments it executes and rolls-back old deployments upon successful new deployments, automatically. Sometimes, however, you want to keep the last version of a node up (but out of the load balancer or inactive) for speedy rollbacks. You can tell Harbor to stop at a certain point of the chain during a rollback, and keep X previous deployments by specifying `keep: X` on a chain link. For example, I could keep the last deploy as an active Docker container, but take it out of the load balancer, using this chain:
+
+```json
+{"web-chain": [
+  {"hook": "github-deployment", "endpoint": "web"},
+  {"puller": "git-puller", "options": {"allowed_host": "github.com"}},
+  {"builder": "docker-builder"},
+  {"scheduler": "docker-scheduler", "keep": 1, "options": {"port": "3000-3999"}},
+  {"notifier": "consul", "options": {"service": "web"}}
+]}
+```
+
+During a new deployment, Harbor will run the chain, grab the last deployment, rollback the ConsulNotifier for that deployment (taking it out of Consul's service discovery), and stop at the DockerScheduler. Next time I deploy a chain, this old deploy will be run through the DockerScheduler rollback, and the rest of the chain.
+
 ### Variables
 In chain definitions, you have access to two kinds of variables:
 
@@ -208,3 +223,35 @@ if !ok {
   min = max = params.GetInt("port")
 }
 ```
+
+### State
+While Harbor enforces compatibility between all links by rigidly defining what data each link has access to (name, image name, deployment ID), some links create more than one resource, which makes tracking the resources it created complicated using just conventions derived from the provided data. For example, a FleetScheduler may be configured to create multiple instances for each deployment, maybe across multiple cloud providers, regions, and hosts. When we execute an automatic rollback when launching a new deployment, the link needs to know where all these resources it created lie.
+
+That information can be encoded in the return value of `Schedule` and `Notify` for schedulers and notifiers (hooks, builders, and pullers do nothing on rollbacks):
+
+```go
+func (m myScheduler) Schedule(image, name, id string, ops options.Options) (interface{}, error) {
+  ...
+  instances := []string {"i23433-3", "ie4t5g55g-2", "ir39r944"}
+  return instances, nil
+}
+```
+
+This return value of `interface{}` type is known as the link's "state". It is a generic interface to allow plugin writers to pass any type of information that makes sense, from a string with a container ID, to a slice of instance IDs (as we show here), to a map that contains hosts mapping to the containers on each host. This state is passed to the `Rollback` function as a `option.Option`:
+
+```go
+func (m myScheduler) Rollback(name, id string, ops options.Options, state options.Option) error {
+  instances := state.GetArray()
+
+  for _, instanceOpt := range instances {
+    instanceID := instanceOpt.GetString()
+    ...
+  }
+
+  return nil
+}
+```
+
+State is persisted by Harbor, so even in the event Harbor is rebooted, it will remember the state of each link.
+
+**Note:** State cannot be modified during a rollback. That means that if a rollback partially fails, the next time `Rollback` is run, it needs to account for the fact that some resources in the state my have already been rolled back. In other words, `Rollback` needs to be an idempotent operation.

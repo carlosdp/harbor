@@ -13,8 +13,8 @@ var RegisteredSchedulers = make(map[string]Scheduler)
 // Scheduler describes an interface for a Harbor Scheduler.
 type Scheduler interface {
 	New() Scheduler
-	Schedule(image, name, id string, ops options.Options) error
-	Rollback(name, id string, ops options.Options) error
+	Schedule(image, name, id string, ops options.Options) (interface{}, error)
+	Rollback(name, id string, ops options.Options, state options.Option) error
 }
 
 // Wrapper is a wrapper struct for holding a
@@ -40,15 +40,21 @@ func (s *Wrapper) Name() string {
 }
 
 // Execute runs the schedule operation for a deployment chain.
-func (s *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
-	err := s.Scheduler.Schedule(d.Image(), d.Name(), d.ID(), ops)
-	return err
+func (s *Wrapper) Execute(d *chain.Deployment, ops options.Options) error {
+	state, err := s.Scheduler.Schedule(d.Image, d.Name, d.ID, ops)
+	if err != nil {
+		return err
+	}
+
+	d.SetState(s.Name(), state)
+
+	return nil
 }
 
 // Rollback reverts the scheduling operation for a deployment chain.
-// TODO: Implement this
-func (s *Wrapper) Rollback(ops options.Options) error {
-	return nil
+func (s *Wrapper) Rollback(d *chain.Deployment, ops options.Options) error {
+	state := d.GetState(s.Name())
+	return s.Scheduler.Rollback(d.Name, d.ID, ops, state)
 }
 
 // RegisterScheduler registers a scheduler with `name`.
