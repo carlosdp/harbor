@@ -8,7 +8,6 @@ import (
 	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/config"
-	"github.com/carlosdp/harbor/deployment"
 	"github.com/carlosdp/harbor/hook"
 )
 
@@ -46,6 +45,9 @@ func main() {
 		for _, link := range c.Links {
 			log.Infof("[%v] Link loaded: %v", c.Name, link.Link.Name())
 		}
+
+		c.Load()
+
 		for _, hookLink := range c.LinksOfType(chain.HOOK) {
 			hookWrap := hookLink.Link.(*hook.Wrapper)
 			go hookWrap.Start(mux, requestChan, hookLink.Options, c, hookLink)
@@ -63,7 +65,7 @@ func main() {
 	for {
 		select {
 		case request := <-requestChan:
-			deploy, err := deployment.NewDeployment(request.Chain, request.Link)
+			deploy, err := chain.NewDeployment(request.Chain, request.Link)
 			if err != nil {
 				log.Errorf("[Deployment] %v", err)
 				return
@@ -73,12 +75,13 @@ func main() {
 			deploy.SetURI(request.URI)
 			deploy.SetImage(request.Image)
 
-			go func(deploy *deployment.Deployment) {
+			go func(deploy *chain.Deployment) {
 				err := deploy.Run()
 				if err != nil {
 					log.Errorf("[Deployment] %v", err)
 					return
 				}
+				deploy.Chain.Persist()
 			}(deploy)
 		}
 	}

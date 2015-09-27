@@ -40,8 +40,8 @@ func (s *Wrapper) Name() string {
 }
 
 // Execute runs the schedule operation for a deployment chain.
-func (s *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
-	state, err := s.Scheduler.Schedule(d.Image(), d.Name(), d.ID(), ops)
+func (s *Wrapper) Execute(d *chain.Deployment, ops options.Options) error {
+	state, err := s.Scheduler.Schedule(d.Image, d.Name, d.ID, ops)
 	if err != nil {
 		return err
 	}
@@ -52,9 +52,9 @@ func (s *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
 }
 
 // Rollback reverts the scheduling operation for a deployment chain.
-func (s *Wrapper) Rollback(d chain.Deployment, ops options.Options) error {
+func (s *Wrapper) Rollback(d *chain.Deployment, ops options.Options) error {
 	state := d.GetState(s.Name())
-	return s.Scheduler.Rollback(d.Name(), d.ID(), ops, state)
+	return s.Scheduler.Rollback(d.Name, d.ID, ops, state)
 }
 
 // RegisterScheduler registers a scheduler with `name`.

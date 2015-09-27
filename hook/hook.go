@@ -63,7 +63,7 @@ func (hw *Wrapper) Name() string {
 }
 
 // Execute does nothing at the moment in a hook.
-func (hw *Wrapper) Execute(d chain.Deployment, ops options.Options) error {
+func (hw *Wrapper) Execute(d *chain.Deployment, ops options.Options) error {
 	return nil
 }
 
@@ -83,7 +83,7 @@ func (hw *Wrapper) Start(mux *http.ServeMux, queue chan<- Request, ops options.O
 }
 
 // Rollback does nothing at the moment in a hook.
-func (hw *Wrapper) Rollback(d chain.Deployment, ops options.Options) error {
+func (hw *Wrapper) Rollback(d *chain.Deployment, ops options.Options) error {
 	return nil
 }
 

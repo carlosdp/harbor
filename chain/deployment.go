@@ -1,43 +1,40 @@
-package deployment
+package chain
 
 import (
 	"errors"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/carlosdp/harbor/chain"
 	"github.com/carlosdp/harbor/options"
 )
 
 // Deployment is a single deployment that can be run.
 type Deployment struct {
-	Chain          *chain.Chain
-	StartStep      int
-	CurrentStep    int
-	CompletedLinks []*chain.Link
-	State          map[string]interface{}
+	Chain       *Chain `json:"-"`
+	StartStep   int
+	CurrentStep int
+	State       map[string]interface{}
 
-	uri     string
-	name    string
-	id      string
-	workDir string
-	image   string
+	URI     string
+	Name    string
+	ID      string
+	WorkDir string
+	Image   string
 	failure bool
 }
 
 // NewDeployment creates a deployment from a `chain` and `hookLink`
 // and returns a deployment that is ready to be run or rolled back.
-func NewDeployment(dChain *chain.Chain, hookLink *chain.Link) (*Deployment, error) {
+func NewDeployment(dChain *Chain, hookLink *Link) (*Deployment, error) {
 	currentStep, err := dChain.LinkPosition(hookLink)
 	if err != nil {
 		return nil, err
 	}
 
 	d := &Deployment{
-		Chain:          dChain,
-		StartStep:      currentStep,
-		CurrentStep:    currentStep + 1,
-		CompletedLinks: make([]*chain.Link, 0),
-		State:          make(map[string]interface{}),
+		Chain:       dChain,
+		StartStep:   currentStep,
+		CurrentStep: currentStep + 1,
+		State:       make(map[string]interface{}),
 	}
 
 	return d, nil
@@ -66,18 +63,13 @@ func (d *Deployment) Run() error {
 		d.CurrentStep++
 	}
 
-	log.Infof("Deployment %v complete, rolling back active deployments", d.ID())
+	log.Infof("Deployment %v complete, rolling back active deployments", d.ID)
 
 	activeDeploys := d.Chain.ActiveDeployments
 
 	for _, deploy := range activeDeploys {
-		dp, ok := deploy.(*Deployment)
-		if !ok {
-			log.Error("Invalid deployment in deployment log")
-		}
-
-		log.Infof("Rolling back deployment %v", dp.ID())
-		dp.Rollback()
+		log.Infof("Rolling back deployment %v", deploy.ID)
+		deploy.Rollback()
 	}
 
 	d.Chain.ActiveDeployments = append(d.Chain.ActiveDeployments, d)
@@ -116,63 +108,36 @@ func (d *Deployment) Rollback() error {
 	return rerr
 }
 
-// URI is the uri of the resource being deployed.
-func (d *Deployment) URI() string {
-	return d.uri
-}
-
-// Name is the name of the resource being deployed.
-func (d *Deployment) Name() string {
-	return d.name
-}
-
-// ID is the deployment id that identifies the deployment for the
-// particular version of the resource being deployed.
-func (d *Deployment) ID() string {
-	return d.id
-}
-
-// WorkDir is the local working directory containing the resource
-// being deployed.
-func (d *Deployment) WorkDir() string {
-	return d.workDir
-}
-
-// Image is the image identifier for the built artifact.
-func (d *Deployment) Image() string {
-	return d.image
-}
-
 // SetURI sets the uri for the resource being deployed.
 func (d *Deployment) SetURI(uri string) {
-	d.uri = uri
+	d.URI = uri
 }
 
 // SetName sets the name of the resource being deployed.
 func (d *Deployment) SetName(name string) {
-	d.name = name
+	d.Name = name
 }
 
 // SetID sets the deployment id.
 func (d *Deployment) SetID(id string) {
-	d.id = id
+	d.ID = id
 }
 
 // SetWorkDir sets the local working directory for the resource
 // being deployed.
 func (d *Deployment) SetWorkDir(workDir string) {
-	d.workDir = workDir
+	d.WorkDir = workDir
 }
 
 // SetImage sets the image identifier for the built artifact.
 func (d *Deployment) SetImage(image string) {
-	d.image = image
+	d.Image = image
 }
 
 // GetIndex indicates where the deployment lies in the deployment log.
 func (d *Deployment) GetIndex() int {
 	for i, dp := range d.Chain.ActiveDeployments {
-		if dp.Name() == d.Name() && dp.ID() == d.ID() {
+		if dp.Name == d.Name && dp.ID == d.ID {
 			return i
 		}
 	}

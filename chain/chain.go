@@ -1,8 +1,14 @@
 package chain
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"io"
+	"io/ioutil"
+	"os"
 
+	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/carlosdp/harbor/options"
 )
 
@@ -18,26 +24,10 @@ const (
 	NOTIFIER
 )
 
-// Deployment describes a single deployment that can be sent through a chain.
-type Deployment interface {
-	URI() string
-	Name() string
-	ID() string
-	WorkDir() string
-	Image() string
-	SetURI(uri string)
-	SetName(name string)
-	SetID(id string)
-	SetWorkDir(workDir string)
-	SetImage(image string)
-	SetState(linkName string, state interface{})
-	GetState(linkName string) options.Option
-}
-
 type link interface {
 	Name() string
-	Execute(d Deployment, ops options.Options) error
-	Rollback(d Deployment, ops options.Options) error
+	Execute(d *Deployment, ops options.Options) error
+	Rollback(d *Deployment, ops options.Options) error
 }
 
 // Link is a link in the chain.
@@ -53,7 +43,7 @@ type Link struct {
 type Chain struct {
 	Name              string
 	Links             []*Link
-	ActiveDeployments []Deployment
+	ActiveDeployments []*Deployment
 }
 
 // NewChain returns an empty deployment chain.
@@ -88,4 +78,41 @@ func (c *Chain) LinkPosition(link *Link) (int, error) {
 	}
 
 	return -1, errors.New("link not in chain")
+}
+
+// Persist dumps the state of all active deployments to disc.
+func (c *Chain) Persist() {
+	output, err := json.Marshal(c.ActiveDeployments)
+	if err != nil {
+		log.Errorf("[%v] Could not store chain state: %v", c.Name, err)
+	}
+
+	f, err := os.Create(c.Name + ".json")
+	if err != nil {
+		log.Errorf("[%v] Could not store chain state: %v", c.Name, err)
+	}
+	defer f.Close()
+	io.Copy(f, bytes.NewReader(output))
+}
+
+// Load loads the state of active deployments from disc.
+func (c *Chain) Load() {
+	if _, err := os.Stat(c.Name + ".json"); os.IsNotExist(err) {
+		return
+	}
+	f, err := os.Open(c.Name + ".json")
+	if err != nil {
+		log.Errorf("[%v] Could not load chain state: %v", c.Name, err)
+	}
+
+	buf, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Errorf("[%v] Could not load chain state: %v", c.Name, err)
+	}
+
+	json.Unmarshal(buf, &c.ActiveDeployments)
+
+	for _, d := range c.ActiveDeployments {
+		d.Chain = c
+	}
 }
