@@ -5,4 +5,5 @@ import (
 	_ "github.com/carlosdp/harbor/plugins/hooks/github-hook"
 	_ "github.com/carlosdp/harbor/plugins/pullers/git-puller"
 	_ "github.com/carlosdp/harbor/plugins/schedulers/docker-scheduler"
+	_ "github.com/carlosdp/harbor/plugins/schedulers/nomad-scheduler"
 )
