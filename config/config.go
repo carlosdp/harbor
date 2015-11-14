@@ -147,6 +147,8 @@ func parseChain(linkDefs []interface{}) (*chain.Chain, error) {
 				link.Options = options.NewOptions(ops)
 			}
 			delete(linkMap, "options")
+		} else {
+			link.Options = options.NewOptions(map[string]interface{}{})
 		}
 
 		link.Parameters = options.NewOptions(linkMap)
