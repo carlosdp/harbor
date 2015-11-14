@@ -3,6 +3,7 @@ package nomadscheduler
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
@@ -91,6 +92,7 @@ func (ds *nomadScheduler) New() scheduler.Scheduler {
 
 func (ds *nomadScheduler) Schedule(image, name, id string, opts options.Options) (interface{}, error) {
 	name = strings.Replace(name, "/", "-", -1)
+	jobName := name + "-" + id
 
 	host := opts.GetString("host")
 	if host == "" {
@@ -102,9 +104,9 @@ func (ds *nomadScheduler) Schedule(image, name, id string, opts options.Options)
 		port = "4646"
 	}
 
-	j := defaultJob(name)
-	tg := defaultTaskGroup(name)
-	t := defaultTask(name)
+	j := defaultJob(jobName)
+	tg := defaultTaskGroup(jobName)
+	t := defaultTask(jobName)
 	t.Config = map[string]string{
 		"image": image,
 	}
@@ -120,15 +122,47 @@ func (ds *nomadScheduler) Schedule(image, name, id string, opts options.Options)
 		return nil, err
 	}
 
-	_, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, errors.New("could not provision job with Nomad: " + resp.Status)
 	}
 
 	return nil, nil
 }
 
-func (ds *nomadScheduler) Rollback(name, id string, ops options.Options, state options.Option) error {
+func (ds *nomadScheduler) Rollback(name, id string, opts options.Options, state options.Option) error {
+	name = strings.Replace(name, "/", "-", -1)
+
+	host := opts.GetString("host")
+	if host == "" {
+		host = "localhost"
+	}
+
+	port := opts.GetString("port")
+	if port == "" {
+		port = "4646"
+	}
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("DELETE", "http://"+host+":"+port+"/v1/jobs/"+name+"-"+id, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return errors.New("could not rollback with Nomad: " + resp.Status)
+	}
+
 	return nil
 }
 
