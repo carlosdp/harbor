@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/carlosdp/harbor/builder"
@@ -25,7 +26,20 @@ func (db *dockerBuilder) New() builder.Builder {
 	return &dockerBuilder{}
 }
 
-func (db *dockerBuilder) Build(workDir, image string, ops options.Options) (string, error) {
+func (db *dockerBuilder) Build(workDir, image string, opts options.Options) (string, error) {
+	imageSep := strings.Split(image, "/")
+	if len(imageSep) > 1 {
+		image = imageSep[1]
+	}
+
+	registry := opts.GetString("registry")
+	username := opts.GetString("username")
+	if registry != "" {
+		image = registry + "/" + image
+	} else if username != "" {
+		image = username + "/" + image
+	}
+
 	image, err := createImage(workDir, image)
 	if err != nil {
 		return "", err
@@ -119,18 +133,7 @@ func writeTarDirectory(path string, shortPath string, tw *tar.Writer) error {
 }
 
 func createDockerImage(originalName, tarPath string) (string, error) {
-	dockerHost := os.Getenv("DOCKER_HOST")
-
-	var client *docker.Client
-	var err error
-
-	if dockerHost == "" {
-		dockerHost = "unix:///var/run/docker.sock"
-		client, err = docker.NewClient(dockerHost)
-	} else {
-		client, err = docker.NewClientFromEnv()
-	}
-
+	client, err := docker.NewClientFromEnv()
 	if err != nil {
 		return "", err
 	}

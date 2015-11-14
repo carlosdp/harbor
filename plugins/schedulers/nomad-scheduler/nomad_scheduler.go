@@ -86,11 +86,11 @@ type nomadRequest struct {
 	Job job
 }
 
-func (ds *nomadScheduler) New() scheduler.Scheduler {
+func (ns *nomadScheduler) New() scheduler.Scheduler {
 	return &nomadScheduler{}
 }
 
-func (ds *nomadScheduler) Schedule(image, name, id string, opts options.Options) (interface{}, error) {
+func (ns *nomadScheduler) Schedule(image, name, id string, opts options.Options) (interface{}, error) {
 	name = strings.Replace(name, "/", "-", -1)
 	jobName := name + "-" + id
 
@@ -134,7 +134,7 @@ func (ds *nomadScheduler) Schedule(image, name, id string, opts options.Options)
 	return nil, nil
 }
 
-func (ds *nomadScheduler) Rollback(name, id string, opts options.Options, state options.Option) error {
+func (ns *nomadScheduler) Rollback(name, id string, opts options.Options, state options.Option) error {
 	name = strings.Replace(name, "/", "-", -1)
 
 	host := opts.GetString("host")
@@ -149,7 +149,7 @@ func (ds *nomadScheduler) Rollback(name, id string, opts options.Options, state 
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("DELETE", "http://"+host+":"+port+"/v1/jobs/"+name+"-"+id, nil)
+	req, err := http.NewRequest("DELETE", "http://"+host+":"+port+"/v1/job/"+name+"-"+id, nil)
 	if err != nil {
 		return err
 	}
