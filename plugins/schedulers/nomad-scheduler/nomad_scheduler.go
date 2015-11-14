@@ -149,7 +149,7 @@ func (ds *nomadScheduler) Rollback(name, id string, opts options.Options, state 
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("DELETE", "http://"+host+":"+port+"/v1/jobs/"+name+"-"+id, nil)
+	req, err := http.NewRequest("DELETE", "http://"+host+":"+port+"/v1/job/"+name+"-"+id, nil)
 	if err != nil {
 		return err
 	}
