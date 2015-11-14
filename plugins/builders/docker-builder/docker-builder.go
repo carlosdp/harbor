@@ -133,18 +133,7 @@ func writeTarDirectory(path string, shortPath string, tw *tar.Writer) error {
 }
 
 func createDockerImage(originalName, tarPath string) (string, error) {
-	dockerHost := os.Getenv("DOCKER_HOST")
-
-	var client *docker.Client
-	var err error
-
-	if dockerHost == "" {
-		dockerHost = "unix:///var/run/docker.sock"
-		client, err = docker.NewClient(dockerHost)
-	} else {
-		client, err = docker.NewClientFromEnv()
-	}
-
+	client, err := docker.NewClientFromEnv()
 	if err != nil {
 		return "", err
 	}
