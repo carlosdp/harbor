@@ -92,7 +92,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/homedir"
+	"github.com/carlosdp/supply-chain/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/homedir"
 )
 
 // ErrHelp is the error returned if the flag -help is invoked but no such flag is defined.

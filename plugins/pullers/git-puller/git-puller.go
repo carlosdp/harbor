@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/carlosdp/harbor/options"
-	"github.com/carlosdp/harbor/puller"
+	"github.com/carlosdp/supply-chain/options"
+	"github.com/carlosdp/supply-chain/puller"
 	git "gopkg.in/libgit2/git2go.v22"
 )
 

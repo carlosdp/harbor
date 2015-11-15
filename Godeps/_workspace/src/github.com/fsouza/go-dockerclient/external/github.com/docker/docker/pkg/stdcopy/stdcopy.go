@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/Sirupsen/logrus"
+	"github.com/carlosdp/supply-chain/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/Sirupsen/logrus"
 )
 
 const (

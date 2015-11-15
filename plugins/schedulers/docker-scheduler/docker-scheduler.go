@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/carlosdp/harbor/options"
-	"github.com/carlosdp/harbor/scheduler"
+	"github.com/carlosdp/supply-chain/options"
+	"github.com/carlosdp/supply-chain/scheduler"
 	"github.com/fsouza/go-dockerclient"
 )
 

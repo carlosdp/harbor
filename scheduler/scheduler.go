@@ -3,8 +3,8 @@ package scheduler
 import (
 	"errors"
 
-	"github.com/carlosdp/harbor/chain"
-	"github.com/carlosdp/harbor/options"
+	"github.com/carlosdp/supply-chain/chain"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 // RegisteredSchedulers contains the schedulers registered with the Harbor build.

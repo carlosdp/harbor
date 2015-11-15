@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/carlosdp/harbor/options"
+	log "github.com/carlosdp/supply-chain/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 // LinkType is an is an enum that identifies a link type.

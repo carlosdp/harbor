@@ -6,10 +6,10 @@ import (
 	"os"
 	"path"
 
-	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/carlosdp/harbor/chain"
-	"github.com/carlosdp/harbor/config"
-	"github.com/carlosdp/harbor/hook"
+	log "github.com/carlosdp/supply-chain/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/carlosdp/supply-chain/chain"
+	"github.com/carlosdp/supply-chain/config"
+	"github.com/carlosdp/supply-chain/hook"
 )
 
 var port string

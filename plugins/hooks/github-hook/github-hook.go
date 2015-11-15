@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"path"
 
-	log "github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/carlosdp/harbor/hook"
-	"github.com/carlosdp/harbor/options"
+	log "github.com/carlosdp/supply-chain/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/carlosdp/supply-chain/hook"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 type githubHook struct {

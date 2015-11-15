@@ -3,7 +3,7 @@ package logrus
 import (
 	"testing"
 
-	"github.com/carlosdp/harbor/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/stretchr/testify/assert"
+	"github.com/carlosdp/supply-chain/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/stretchr/testify/assert"
 )
 
 type TestHook struct {

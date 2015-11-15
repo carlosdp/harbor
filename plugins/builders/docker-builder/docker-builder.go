@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/carlosdp/harbor/builder"
-	"github.com/carlosdp/harbor/options"
+	"github.com/carlosdp/supply-chain/builder"
+	"github.com/carlosdp/supply-chain/options"
 	"github.com/fsouza/go-dockerclient"
 )
 

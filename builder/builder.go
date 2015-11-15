@@ -3,8 +3,8 @@ package builder
 import (
 	"errors"
 
-	"github.com/carlosdp/harbor/chain"
-	"github.com/carlosdp/harbor/options"
+	"github.com/carlosdp/supply-chain/chain"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 // RegisteredBuilders contains the builders registered with the Harbor build.

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/carlosdp/harbor/options"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 // Deployment is a single deployment that can be run.

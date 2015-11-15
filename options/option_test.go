@@ -3,7 +3,7 @@ package options_test
 import (
 	"testing"
 
-	"github.com/carlosdp/harbor/options"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 func TestOptionWrapsString(t *testing.T) {

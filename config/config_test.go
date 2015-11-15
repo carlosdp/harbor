@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/carlosdp/harbor/config"
-	_ "github.com/carlosdp/harbor/mocks"
+	"github.com/carlosdp/supply-chain/config"
+	_ "github.com/carlosdp/supply-chain/mocks"
 )
 
 func TestFailsOnEmptyConfig(t *testing.T) {

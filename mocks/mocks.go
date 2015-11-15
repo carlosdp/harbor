@@ -3,11 +3,11 @@ package config_test
 import (
 	"net/http"
 
-	"github.com/carlosdp/harbor/builder"
-	"github.com/carlosdp/harbor/hook"
-	"github.com/carlosdp/harbor/options"
-	"github.com/carlosdp/harbor/puller"
-	"github.com/carlosdp/harbor/scheduler"
+	"github.com/carlosdp/supply-chain/builder"
+	"github.com/carlosdp/supply-chain/hook"
+	"github.com/carlosdp/supply-chain/options"
+	"github.com/carlosdp/supply-chain/puller"
+	"github.com/carlosdp/supply-chain/scheduler"
 )
 
 type fakeHook struct {

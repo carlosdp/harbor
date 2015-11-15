@@ -3,8 +3,8 @@ package puller
 import (
 	"errors"
 
-	"github.com/carlosdp/harbor/chain"
-	"github.com/carlosdp/harbor/options"
+	"github.com/carlosdp/supply-chain/chain"
+	"github.com/carlosdp/supply-chain/options"
 )
 
 // RegisteredPullers contains the pullers registered with the Harbor build.
