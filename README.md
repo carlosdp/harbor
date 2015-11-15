@@ -1,5 +1,5 @@
-# Harbor
-Harbor is a light-weight automated, declarative-configuration, service orchestration system that is designed to assist in the continuous deployment of Docker container-based clusters in a minimal configuration environment. This design encourages preventing vendor lock-in and spreading a cluster over multiple cloud service providers to reduce dependency.
+# SupplyChain
+SupplyChain is a light-weight automated, declarative-configuration, service orchestration system that is designed to assist in the continuous deployment of Docker container-based clusters in a minimal configuration environment. This design encourages preventing vendor lock-in and spreading a cluster over multiple cloud service providers to reduce dependency.
 
 It allows you to define "Deployment Chains" in a declarative manner, like this:
 
@@ -13,7 +13,7 @@ It allows you to define "Deployment Chains" in a declarative manner, like this:
 ]}
 ```
 
-Using this configuration, Harbor will listen for a Deployment webhook request from GitHub, and then work its way down the chain:
+Using this configuration, SupplyChain will listen for a Deployment webhook request from GitHub, and then work its way down the chain:
 
 - Pull the repository and commit sent by the webhook.
 - Build a Docker image from the Dockerfile in the repository.
@@ -25,15 +25,15 @@ It will also detect any existing previous deploys and roll it back by:
 - Notifying Consul to remove the container node.
 - Rolling back the scheduled container by destroying it.
 
-Here, we used GitHub, Git, Docker, and Consul "chain links", but Harbor is entirely plugin based, so virtually any framework or service can be configured as long as a plugin is written and loaded.
+Here, we used GitHub, Git, Docker, and Consul "chain links", but SupplyChain is entirely plugin based, so virtually any framework or service can be configured as long as a plugin is written and loaded.
 
 ## What it is not
-Harbor is **not** a health-check framework or a process/node monitoring service. It strictly deals with the actions that are involved in managing the deployment and placement of service nodes, and the rolling back of actions performed in a deployment.
+SupplyChain is **not** a health-check framework or a process/node monitoring service. It strictly deals with the actions that are involved in managing the deployment and placement of service nodes, and the rolling back of actions performed in a deployment.
 
-For example, Harbor will not detect when a Docker container fails, but a service that does detect that can communicate to Harbor and have it perform an action, such as deploying another node or rolling back the latest deployment. Harbor is designed to do **one** thing very well, and that is making the deployment of services over a cluster (1 node or 1000+) easy, trustworthy, stable, and reversible in a fully automated fashion.
+For example, SupplyChain will not detect when a Docker container fails, but a service that does detect that can communicate to SupplyChain and have it perform an action, such as deploying another node or rolling back the latest deployment. SupplyChain is designed to do **one** thing very well, and that is making the deployment of services over a cluster (1 node or 1000+) easy, trustworthy, stable, and reversible in a fully automated fashion.
 
 ## Design
-There are 5 different types of "Chain Links" (providers) in a Harbor deployment chain:
+There are 5 different types of "Chain Links" (providers) in a SupplyChain deployment chain:
 
 ### Hooks
 Hooks receive notifications from external services and provide information to the rest of the chain. They are also **always** the first Link in a chain. Commonly, hooks are receive notifications of a requested deployment. An example of a Hook is a GitHub Deployment API webhook. This Hook would receive a `create_deployment` event from GitHub, authenticate it, and then gather the information on the repository in question to pass to the next stage in the chain.
@@ -42,7 +42,7 @@ Hooks receive notifications from external services and provide information to th
 Pullers are simply responsible for grabbing the correct version of the repository or artifact being deployed. An obvious Puller is the Git Puller which pulls from a specified Git remote repository and branch. You could also have a Puller that pulls a pre-built RPM package and skip adding a builder step.
 
 ### Builders
-Builders are responsible for taking source code and building it into a package that can be passed to the Schedulers. An example of a builder would be the Docker Builder that builds a container using a Dockerfile in the source code and passes the image to the Scheduler. Builders are not always necessary in a chain as it is generally better practice to perform a build using a CI or dedicated build system which would then pass the already built package or container image to Harbor via a Hook.
+Builders are responsible for taking source code and building it into a package that can be passed to the Schedulers. An example of a builder would be the Docker Builder that builds a container using a Dockerfile in the source code and passes the image to the Scheduler. Builders are not always necessary in a chain as it is generally better practice to perform a build using a CI or dedicated build system which would then pass the already built package or container image to SupplyChain via a Hook.
 
 ### Schedulers
 Schedulers deploy the new artifact to the cluster. An example Scheduler is the Fleet Scheduler which uses CoreOS Fleet to deploy containers across a range of cluster machines.
@@ -54,7 +54,7 @@ Notifiers notify some service on the status of a deployment. One example of a No
 If a Chain Link runs into an error, it cancels the rest of the deployment chain and executes a `Rollback` event on the already-executed Chain Links.
 
 ## Configuration
-Harbor only requires one simple JSON file to setup a deployment chain:
+SupplyChain only requires one simple JSON file to setup a deployment chain:
 
 *Note:* Deployment Chains must be suffixed with '-chain'
 
@@ -114,7 +114,7 @@ Here, we used a "sub chain" by adding the "chain" attribute to the Scheduler. An
 Sub Chains also allow for temporary chains, as in this case. When "always_rollback" is set to `true` on a chain link, it will "soft rollback" the chain link after complete execution, causing a rollback of that chain-link, but not the rest of the chain. If that chain link also has a Sub Chain, it will wait for that Sub Chain to complete before executing that soft rollback.
 
 ### Automatic Rollbacks of Previous Deploys
-Harbor keeps track of deployments it executes and rolls-back old deployments upon successful new deployments, automatically. Sometimes, however, you want to keep the last version of a node up (but out of the load balancer or inactive) for speedy rollbacks. You can tell Harbor to stop at a certain point of the chain during a rollback, and keep X previous deployments by specifying `keep: X` on a chain link. For example, I could keep the last deploy as an active Docker container, but take it out of the load balancer, using this chain:
+SupplyChain keeps track of deployments it executes and rolls-back old deployments upon successful new deployments, automatically. Sometimes, however, you want to keep the last version of a node up (but out of the load balancer or inactive) for speedy rollbacks. You can tell SupplyChain to stop at a certain point of the chain during a rollback, and keep X previous deployments by specifying `keep: X` on a chain link. For example, I could keep the last deploy as an active Docker container, but take it out of the load balancer, using this chain:
 
 ```json
 {"web-chain": [
@@ -126,7 +126,7 @@ Harbor keeps track of deployments it executes and rolls-back old deployments upo
 ]}
 ```
 
-During a new deployment, Harbor will run the chain, grab the last deployment, rollback the ConsulNotifier for that deployment (taking it out of Consul's service discovery), and stop at the DockerScheduler. Next time I deploy a chain, this old deploy will be run through the DockerScheduler rollback, and the rest of the chain.
+During a new deployment, SupplyChain will run the chain, grab the last deployment, rollback the ConsulNotifier for that deployment (taking it out of Consul's service discovery), and stop at the DockerScheduler. Next time I deploy a chain, this old deploy will be run through the DockerScheduler rollback, and the rest of the chain.
 
 ### Variables
 In chain definitions, you have access to two kinds of variables:
@@ -134,26 +134,26 @@ In chain definitions, you have access to two kinds of variables:
 - Environment variables, prepended with `$ENV_`
 - Chain Link variables defined by previous links in the chain, prepended with `$<chain link name>_`. For example: `$DOCKER_SCHEDULER_NUM_HOSTS`.
 
-## Harbor CLI
-Harbor ships with a special hook called `harbor-cli-hook`. It allows you to make chains that are initiated directly via the command line using the `harbor` executable.
+## SupplyChain CLI
+SupplyChain ships with a special hook called `chain-cli-hook`. It allows you to make chains that are initiated directly via the command line using the `supply-chain` executable.
 
 ```json
 {"web-chain":[
-  {"hook": "harbor-cli-hook", "command": "cluster-tests"},
+  {"hook": "chain-cli-hook", "command": "cluster-tests"},
   {"builder": "jenkins-builder", "options": {
-    "repo": "git@github.com:$HARBOR_CLI_REPO",
-    "branch": "$HARBOR_CLI_BRANCH"
+    "repo": "git@github.com:$SUPPLY_CHAIN_CLI_REPO",
+    "branch": "$SUPPLY_CHAIN_CLI_BRANCH"
   }}
 ]}
 ```
 
-The HarborCLIHook populates its variables with the flag arguments it receives on the command line. So here, we can run:
+The SupplyChainCLIHook populates its variables with the flag arguments it receives on the command line. So here, we can run:
 
 ```bash
-> harbor cluster-tests -repo carlosdp/test-app -branch new-feature
+> supply-chain cluster-tests -repo carlosdp/test-app -branch new-feature
 ```
 
-Harbor will put the argument to `-repo` in `$HARBOR_CLI_REPO` and `-branch` in `$HARBOR_CLI_BRANCH`.
+SupplyChain will put the argument to `-repo` in `$SUPPLY_CHAIN_CLI_REPO` and `-branch` in `$SUPPLY_CHAIN_CLI_BRANCH`.
 
 # Framework Design
 
@@ -225,7 +225,7 @@ if !ok {
 ```
 
 ### State
-While Harbor enforces compatibility between all links by rigidly defining what data each link has access to (name, image name, deployment ID), some links create more than one resource, which makes tracking the resources it created complicated using just conventions derived from the provided data. For example, a FleetScheduler may be configured to create multiple instances for each deployment, maybe across multiple cloud providers, regions, and hosts. When we execute an automatic rollback when launching a new deployment, the link needs to know where all these resources it created lie.
+While SupplyChain enforces compatibility between all links by rigidly defining what data each link has access to (name, image name, deployment ID), some links create more than one resource, which makes tracking the resources it created complicated using just conventions derived from the provided data. For example, a FleetScheduler may be configured to create multiple instances for each deployment, maybe across multiple cloud providers, regions, and hosts. When we execute an automatic rollback when launching a new deployment, the link needs to know where all these resources it created lie.
 
 That information can be encoded in the return value of `Schedule` and `Notify` for schedulers and notifiers (hooks, builders, and pullers do nothing on rollbacks):
 
@@ -252,6 +252,6 @@ func (m myScheduler) Rollback(name, id string, ops options.Options, state option
 }
 ```
 
-State is persisted by Harbor, so even in the event Harbor is rebooted, it will remember the state of each link.
+State is persisted by SupplyChain, so even in the event SupplyChain is rebooted, it will remember the state of each link.
 
 **Note:** State cannot be modified during a rollback. That means that if a rollback partially fails, the next time `Rollback` is run, it needs to account for the fact that some resources in the state my have already been rolled back. In other words, `Rollback` needs to be an idempotent operation.
